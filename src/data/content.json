@@ -1,0 +1,95 @@
+{
+  "writeups": [
+    {
+      "title": "Writeup HTB: Builder",
+      "date": "2026-04-23",
+      "platform": "Hack The Box",
+      "summary": "Explotación de Jenkins vulnerable a CVE-2024-23897, pivoteo de credenciales y escalamiento de privilegios hasta root.",
+      "tags": ["Jenkins", "CVE-2024-23897", "Linux", "PrivEsc"],
+      "url": "#"
+    },
+    {
+      "title": "Writeup HTB: Active",
+      "date": "2026-03-16",
+      "platform": "Hack The Box",
+      "summary": "Enumeración SMB y Active Directory, abuso de GPP y ataque Kerberoasting para obtención de privilegios elevados.",
+      "tags": ["Active Directory", "SMB", "Kerberoasting", "Windows"],
+      "url": "#"
+    },
+    {
+      "title": "Análisis de API: IDOR + Autorización rota",
+      "date": "2026-02-10",
+      "platform": "Proyecto privado",
+      "summary": "Cadena de fallos en API REST que permitió acceso horizontal a recursos de terceros por control de acceso insuficiente.",
+      "tags": ["API", "IDOR", "OWASP API Top 10"],
+      "url": "#"
+    }
+  ],
+  "scripts": [
+    {
+      "title": "ReconScope",
+      "language": "Python",
+      "type": "Automatización",
+      "summary": "Pipeline de reconocimiento que integra subdominios, puertos, tecnologías y toma de capturas para triage.",
+      "tags": ["Python", "Recon", "Nmap", "Subfinder"],
+      "url": "#"
+    },
+    {
+      "title": "AD Quick Audit",
+      "language": "Bash",
+      "type": "Auditoría",
+      "summary": "Script de auditoría rápida para revisar exposición básica de Active Directory y malas configuraciones frecuentes.",
+      "tags": ["Active Directory", "Bash", "Hardening"],
+      "url": "#"
+    },
+    {
+      "title": "API Fuzz Starter",
+      "language": "JavaScript",
+      "type": "Testing",
+      "summary": "Colección base para fuzzing de endpoints y validación de respuestas inseguras en APIs internas.",
+      "tags": ["API", "Fuzzing", "Node.js"],
+      "url": "#"
+    }
+  ],
+  "exploits": [
+    {
+      "title": "PoC: Inyección de comandos en utilitario de conversión",
+      "status": "Responsable",
+      "type": "RCE",
+      "summary": "Prueba de concepto en entorno controlado para demostrar ejecución remota por sanitización insuficiente de parámetros.",
+      "tags": ["RCE", "Command Injection", "Linux"],
+      "url": "#"
+    },
+    {
+      "title": "PoC: Deserialización insegura en servicio interno",
+      "status": "En divulgación coordinada",
+      "type": "Deserialización",
+      "summary": "Cadena de explotación orientada a validar impacto real y trazabilidad de ejecución en servicio corporativo.",
+      "tags": ["Deserialización", "Java", "Seguridad de aplicaciones"],
+      "url": "#"
+    }
+  ],
+  "recursos": [
+    {
+      "title": "Checklist de Pentesting Web",
+      "type": "Guía",
+      "summary": "Lista práctica para pruebas web basada en OWASP ASVS y experiencia de campo en auditorías técnicas.",
+      "tags": ["OWASP", "Checklist", "Web"],
+      "url": "#"
+    },
+    {
+      "title": "Plantilla de reporte ejecutivo",
+      "type": "Plantilla",
+      "summary": "Formato para traducir hallazgos técnicos a impacto de negocio con prioridades de remediación.",
+      "tags": ["Reporting", "Riesgo", "Cliente"],
+      "url": "#"
+    },
+    {
+      "title": "Mapa de aprendizaje TI/TO",
+      "type": "Ruta de estudio",
+      "summary": "Ruta sugerida para fortalecer habilidades en convergencia TI/TO y seguridad de infraestructuras críticas.",
+      "tags": ["TI/TO", "OT", "ICS"],
+      "url": "#"
+    }
+  ]
+}

@@ -1,53 +1,54 @@
 {
   "name": "Daniel Felipe Galindo Arias",
-  "headline": "Consultor Senior de Ciberseguridad - Red Team - Ethical Hacking - TI/TO",
+  "headline": "Consultor Sénior de Ciberseguridad — Red Team — Ethical Hacking — TI/TO",
   "location": "Neiva, Huila, Colombia",
   "availability": "Disponible para trabajo remoto a nivel mundial",
-  "summary": "Magister en Seguridad Informatica con mas de 15 anos de experiencia en ciberseguridad, seguridad ofensiva y gestion de riesgos tecnologicos. Especialista en penetration testing, ethical hacking, Red Team, analisis de vulnerabilidades y evaluacion de controles en entornos TI/TO. Experiencia en GNU/Linux, Windows, Active Directory, virtualizacion, servidores web, hardening y respuesta a incidentes, con enfoque en continuidad operativa y resiliencia.",
+  "summary": "Magíster en Seguridad Informática con más de 15 años de experiencia en ciberseguridad, seguridad ofensiva y gestión de riesgos tecnológicos. Especialista en penetration testing, ethical hacking, Red Team, análisis de vulnerabilidades y evaluación de controles en entornos TI/TO. Experiencia en GNU/Linux, Windows, Active Directory, virtualización, servidores web, hardening y respuesta a incidentes, con enfoque en continuidad operativa y resiliencia.",
   "contact": {
+    "github": "https://github.com/aka-met4ll0f",
     "linkedin": "https://linkedin.com/in/daniel-galindoa",
     "hackTheBox": "https://app.hackthebox.com/public/users/886162"
   },
   "professionalFocus": [
-    "Red Team y pruebas de penetracion",
-    "Auditoria tecnica de ciberseguridad",
-    "Evaluacion de vulnerabilidades",
+    "Red Team y pruebas de penetración",
+    "Auditoría técnica de ciberseguridad",
+    "Evaluación de vulnerabilidades",
     "Seguridad TI y TO/OT",
     "Seguridad de aplicaciones y APIs",
     "Pentesting web, Android, APIs y Active Directory"
   ],
   "experience": [
     {
-      "role": "Consultor Senior de Ciberseguridad y Ethical Hacking",
+      "role": "Consultor Sénior de Ciberseguridad y Ethical Hacking",
       "company": "KPMG Advisory, Tax & Legal S.A.S.",
       "period": "Feb 2025 - Actualidad",
       "modality": "Remoto",
       "highlights": [
-        "Ejecucion de auditorias tecnicas, pentesting y evaluaciones de seguridad en aplicaciones, servicios web y activos corporativos.",
-        "Analisis de vulnerabilidades y elaboracion de informes tecnicos/ejecutivos con evidencia, impacto y remediacion.",
-        "Participacion en iniciativas de seguridad ofensiva y evaluacion de exposicion."
+        "Ejecución de auditorías técnicas, pentesting y evaluaciones de seguridad en aplicaciones, servicios web y activos corporativos.",
+        "Análisis de vulnerabilidades y elaboración de informes técnicos/ejecutivos con evidencia, impacto y remediación.",
+        "Participación en iniciativas de seguridad ofensiva y evaluación de exposición."
       ]
     },
     {
       "role": "Cybersecurity Analyst",
-      "company": "Informatica y Tecnologia Stefanini S.A.",
+      "company": "Informática y Tecnología Stefanini S.A.",
       "period": "Oct 2022 - Ene 2025",
       "modality": "Remoto",
       "highlights": [
-        "Ejecucion de auditorias tecnicas y pruebas de penetracion sobre activos corporativos.",
-        "Apoyo en analisis de vulnerabilidades, gestion de riesgos y fortalecimiento de controles.",
-        "Soporte a monitoreo, documentacion tecnica, gestion de incidentes y acompanamiento a negocio."
+        "Ejecución de auditorías técnicas y pruebas de penetración sobre activos corporativos.",
+        "Apoyo en análisis de vulnerabilidades, gestión de riesgos y fortalecimiento de controles.",
+        "Soporte a monitoreo, documentación técnica, gestión de incidentes y acompañamiento a negocio."
       ]
     },
     {
-      "role": "Gestor de Ciberseguridad / Configuracion / Infraestructura / Sistemas",
+      "role": "Gestor de Ciberseguridad / Configuración / Infraestructura / Sistemas",
       "company": "Alcanos de Colombia S.A. E.S.P.",
       "period": "Jun 2012 - Oct 2022",
       "modality": "Presencial/Remoto",
       "highlights": [
-        "Evolucion profesional desde soporte e infraestructura hasta ciberseguridad en entornos empresariales.",
+        "Evolución profesional desde soporte e infraestructura hasta ciberseguridad en entornos empresariales.",
         "Apoyo a seguridad perimetral, certificados SSL, control de versiones con Git y continuidad operativa.",
-        "Ejecucion de auditorias tecnicas, pentesting y evaluacion de seguridad de aplicaciones y servicios web."
+        "Ejecución de auditorías técnicas, pentesting y evaluación de seguridad de aplicaciones y servicios web."
       ]
     }
   ],
@@ -59,13 +60,13 @@
     "Sophos ET80 XG Firewall (2019)"
   ],
   "education": [
-    "Maestria en Seguridad Informatica - UNIR, Espana (2023)",
-    "Ingenieria de Sistemas - CORHUILA, Neiva (2021)",
-    "Tecnologo en Ensamble y Mantenimiento de Computadores y Redes - SENA, Neiva (2012)"
+    "Maestría en Seguridad Informática - UNIR, España (2023)",
+    "Ingeniería de Sistemas - CORHUILA, Neiva (2021)",
+    "Tecnólogo en Ensamble y Mantenimiento de Computadores y Redes - SENA, Neiva (2012)"
   ],
   "languages": [
-    "Espanol: Nativo",
-    "Ingles: Lectura y escritura"
+    "Español: nativo",
+    "Inglés: lectura y escritura"
   ],
   "skills": [
     "Burp Suite Pro",

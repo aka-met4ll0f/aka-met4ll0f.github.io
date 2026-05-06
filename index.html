@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Portafolio ofensivo y CV online de Daniel Felipe Galindo Arias, Consultor Senior de Ciberseguridad y Ethical Hacking."
+      content="Portafolio ofensivo y CV en línea de Daniel Felipe Galindo Arias, Consultor Senior de Ciberseguridad y Ethical Hacking."
     />
     <meta name="theme-color" content="#08120f" />
-    <title>Daniel Felipe Galindo Arias | Offensive Security Portfolio</title>
+    <title>Daniel Felipe Galindo Arias | Portafolio de Seguridad Ofensiva</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,26 +17,70 @@
     />
     <link rel="stylesheet" href="./src/styles/styles.css" />
   </head>
-  <body>
+  <body data-page="inicio">
     <div class="grid-overlay" aria-hidden="true"></div>
     <div class="noise-overlay" aria-hidden="true"></div>
 
-    <header class="hero" id="top">
-      <p class="hero-kicker">Offensive Security Portfolio</p>
+    <header class="site-header">
+      <a class="site-logo" href="./index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a data-nav="inicio" href="./index.html">Inicio</a>
+        <a data-nav="writeups" href="./writeups.html">Writeups</a>
+        <a data-nav="scripts" href="./scripts.html">Scripts</a>
+        <a data-nav="exploits" href="./exploits.html">Exploits</a>
+        <a data-nav="recursos" href="./recursos.html">Recursos</a>
+      </nav>
+    </header>
+
+    <section class="hero" id="top">
+      <p class="hero-kicker">Portafolio de Seguridad Ofensiva</p>
       <h1 id="name">Daniel Felipe Galindo Arias</h1>
       <p id="headline" class="headline">Consultor Senior de Ciberseguridad</p>
       <p id="location" class="meta"></p>
+      <div class="terminal-line" aria-live="polite">
+        <span class="prompt">root@met4ll0f:~$</span>
+        <span id="terminal-text"></span>
+        <span class="cursor" aria-hidden="true"></span>
+      </div>
 
       <nav class="top-links" aria-label="Enlaces principales">
+        <a id="github-link" href="#" target="_blank" rel="noreferrer noopener">GitHub</a>
         <a id="linkedin-link" href="#" target="_blank" rel="noreferrer noopener">LinkedIn</a>
         <a id="htb-link" href="#" target="_blank" rel="noreferrer noopener">Hack The Box</a>
       </nav>
-    </header>
+    </section>
 
     <main class="layout">
       <section class="panel panel-large" aria-labelledby="about-title">
         <h2 id="about-title">Perfil</h2>
         <p id="summary"></p>
+      </section>
+
+      <section class="panel panel-large" aria-labelledby="library-title">
+        <h2 id="library-title">Biblioteca Técnica</h2>
+        <div class="quick-grid">
+          <a class="quick-card" href="./writeups.html">
+            <h3>Writeups</h3>
+            <p>Resolución de máquinas, cadenas de ataque y escalamiento de privilegios.</p>
+          </a>
+          <a class="quick-card" href="./scripts.html">
+            <h3>Scripts</h3>
+            <p>Automatizaciones para reconocimiento, auditoría y validación técnica.</p>
+          </a>
+          <a class="quick-card" href="./exploits.html">
+            <h3>Exploits</h3>
+            <p>Pruebas de concepto y ejercicios de explotación en entornos controlados.</p>
+          </a>
+          <a class="quick-card" href="./recursos.html">
+            <h3>Recursos</h3>
+            <p>Plantillas, guías y material de apoyo para práctica ofensiva.</p>
+          </a>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="metrics-title">
+        <h2 id="metrics-title">Indicadores Profesionales</h2>
+        <div id="career-metrics" class="stats-grid"></div>
       </section>
 
       <section class="panel" aria-labelledby="focus-title">
@@ -47,7 +91,7 @@
       <section class="panel" aria-labelledby="htb-title">
         <div class="panel-title-row">
           <h2 id="htb-title">Hack The Box</h2>
-          <span id="htb-sync-date" class="tag">Sincronizacion pendiente</span>
+          <span id="htb-sync-date" class="tag">Sincronización pendiente</span>
         </div>
         <div id="htb-cards" class="stats-grid"></div>
         <div class="panel-note" id="htb-note"></div>
@@ -64,12 +108,12 @@
       </section>
 
       <section class="panel" aria-labelledby="skills-title">
-        <h2 id="skills-title">Stack Tecnico</h2>
+        <h2 id="skills-title">Stack Técnico</h2>
         <ul id="skills-list" class="pill-list"></ul>
       </section>
 
       <section class="panel" aria-labelledby="education-title">
-        <h2 id="education-title">Formacion</h2>
+        <h2 id="education-title">Formación</h2>
         <ul id="education-list" class="stack-list"></ul>
       </section>
 
@@ -77,15 +121,33 @@
         <h2 id="languages-title">Idiomas</h2>
         <ul id="languages-list" class="stack-list"></ul>
       </section>
+
+      <section class="panel panel-large" aria-labelledby="latest-writeups-title">
+        <div class="panel-title-row">
+          <h2 id="latest-writeups-title">Últimos writeups</h2>
+          <a class="entry-link" href="./writeups.html">Ver todos</a>
+        </div>
+        <div id="writeups-preview" class="entry-grid"></div>
+      </section>
+
+      <section class="panel panel-large" aria-labelledby="latest-scripts-title">
+        <div class="panel-title-row">
+          <h2 id="latest-scripts-title">Scripts destacados</h2>
+          <a class="entry-link" href="./scripts.html">Ver todos</a>
+        </div>
+        <div id="scripts-preview" class="entry-grid"></div>
+      </section>
     </main>
 
     <footer class="footer">
       <p>
         Disponible para proyectos de seguridad ofensiva, pentesting web/API/AD y evaluaciones TI/TO.
       </p>
+      <p>© <span class="js-year"></span> Daniel Galindo.</p>
       <a href="#top">Volver arriba</a>
     </footer>
 
     <script type="module" src="./src/js/main.js"></script>
+    <script type="module" src="./src/js/index-feed.js"></script>
   </body>
 </html>

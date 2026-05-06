@@ -107,7 +107,7 @@ function mapData(payloads, previous) {
     rootOwns: rootOwns ?? previous.rootOwns ?? null,
     challengesSolved: challengesSolved ?? previous.challengesSolved ?? null,
     updatedAt: new Date().toISOString(),
-    note: "Datos sincronizados de HTB via job server-side. Sin exponer tokens en frontend.",
+    note: "Datos sincronizados de HTB vía job server-side. Sin exponer tokens en frontend.",
     warning: false
   };
 }
@@ -120,11 +120,11 @@ async function main() {
       ...previous,
       source: "manual-fallback",
       updatedAt: new Date().toISOString(),
-      note: "No se detecto HTB_API_TOKEN. Conservando datos actuales.",
+      note: "No se detectó HTB_API_TOKEN. Conservando datos actuales.",
       warning: true
     };
     await writeFile(dataFile, JSON.stringify(fallback, null, 2) + "\n", "utf8");
-    console.warn("HTB_API_TOKEN no definido. Se guardo fallback seguro.");
+    console.warn("HTB_API_TOKEN no definido. Se guardó fallback seguro.");
     return;
   }
 
@@ -132,13 +132,13 @@ async function main() {
     const payloads = await resolvePayload();
     const normalized = mapData(payloads, previous);
     await writeFile(dataFile, JSON.stringify(normalized, null, 2) + "\n", "utf8");
-    console.log("Sincronizacion HTB completada.");
+    console.log("Sincronización HTB completada.");
   } catch (error) {
     const fallback = {
       ...previous,
       source: "htb-sync-error",
       updatedAt: new Date().toISOString(),
-      note: "Fallo la sincronizacion HTB. Se conservaron datos previos.",
+      note: "Falló la sincronización HTB. Se conservaron datos previos.",
       warning: true,
       error: error.message
     };
