@@ -1,0 +1,13 @@
+{
+  "source": "manual-fallback",
+  "username": "Daniel Galindo",
+  "rankingGlobal": null,
+  "points": null,
+  "level": null,
+  "userOwns": null,
+  "rootOwns": null,
+  "challengesSolved": null,
+  "updatedAt": "2026-05-06T15:06:49.253Z",
+  "note": "No se detecto HTB_API_TOKEN. Conservando datos actuales.",
+  "warning": true
+}

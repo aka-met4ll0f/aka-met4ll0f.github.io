@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Portafolio ofensivo y CV online de Daniel Felipe Galindo Arias, Consultor Senior de Ciberseguridad y Ethical Hacking."
+    />
+    <meta name="theme-color" content="#08120f" />
+    <title>Daniel Felipe Galindo Arias | Offensive Security Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/styles/styles.css" />
+  </head>
+  <body>
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="hero" id="top">
+      <p class="hero-kicker">Offensive Security Portfolio</p>
+      <h1 id="name">Daniel Felipe Galindo Arias</h1>
+      <p id="headline" class="headline">Consultor Senior de Ciberseguridad</p>
+      <p id="location" class="meta"></p>
+
+      <nav class="top-links" aria-label="Enlaces principales">
+        <a id="linkedin-link" href="#" target="_blank" rel="noreferrer noopener">LinkedIn</a>
+        <a id="htb-link" href="#" target="_blank" rel="noreferrer noopener">Hack The Box</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section class="panel panel-large" aria-labelledby="about-title">
+        <h2 id="about-title">Perfil</h2>
+        <p id="summary"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="focus-title">
+        <h2 id="focus-title">Foco Profesional</h2>
+        <ul id="focus-list" class="stack-list"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="htb-title">
+        <div class="panel-title-row">
+          <h2 id="htb-title">Hack The Box</h2>
+          <span id="htb-sync-date" class="tag">Sincronizacion pendiente</span>
+        </div>
+        <div id="htb-cards" class="stats-grid"></div>
+        <div class="panel-note" id="htb-note"></div>
+      </section>
+
+      <section class="panel panel-large" aria-labelledby="experience-title">
+        <h2 id="experience-title">Experiencia Profesional</h2>
+        <div id="experience-list" class="timeline"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="cert-title">
+        <h2 id="cert-title">Certificaciones</h2>
+        <ul id="cert-list" class="stack-list"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="skills-title">
+        <h2 id="skills-title">Stack Tecnico</h2>
+        <ul id="skills-list" class="pill-list"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="education-title">
+        <h2 id="education-title">Formacion</h2>
+        <ul id="education-list" class="stack-list"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="languages-title">
+        <h2 id="languages-title">Idiomas</h2>
+        <ul id="languages-list" class="stack-list"></ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Disponible para proyectos de seguridad ofensiva, pentesting web/API/AD y evaluaciones TI/TO.
+      </p>
+      <a href="#top">Volver arriba</a>
+    </footer>
+
+    <script type="module" src="./src/js/main.js"></script>
+  </body>
+</html>

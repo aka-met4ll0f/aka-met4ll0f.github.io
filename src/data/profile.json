@@ -1,0 +1,92 @@
+{
+  "name": "Daniel Felipe Galindo Arias",
+  "headline": "Consultor Senior de Ciberseguridad - Red Team - Ethical Hacking - TI/TO",
+  "location": "Neiva, Huila, Colombia",
+  "availability": "Disponible para trabajo remoto a nivel mundial",
+  "summary": "Magister en Seguridad Informatica con mas de 15 anos de experiencia en ciberseguridad, seguridad ofensiva y gestion de riesgos tecnologicos. Especialista en penetration testing, ethical hacking, Red Team, analisis de vulnerabilidades y evaluacion de controles en entornos TI/TO. Experiencia en GNU/Linux, Windows, Active Directory, virtualizacion, servidores web, hardening y respuesta a incidentes, con enfoque en continuidad operativa y resiliencia.",
+  "contact": {
+    "linkedin": "https://linkedin.com/in/daniel-galindoa",
+    "hackTheBox": "https://app.hackthebox.com/public/users/886162"
+  },
+  "professionalFocus": [
+    "Red Team y pruebas de penetracion",
+    "Auditoria tecnica de ciberseguridad",
+    "Evaluacion de vulnerabilidades",
+    "Seguridad TI y TO/OT",
+    "Seguridad de aplicaciones y APIs",
+    "Pentesting web, Android, APIs y Active Directory"
+  ],
+  "experience": [
+    {
+      "role": "Consultor Senior de Ciberseguridad y Ethical Hacking",
+      "company": "KPMG Advisory, Tax & Legal S.A.S.",
+      "period": "Feb 2025 - Actualidad",
+      "modality": "Remoto",
+      "highlights": [
+        "Ejecucion de auditorias tecnicas, pentesting y evaluaciones de seguridad en aplicaciones, servicios web y activos corporativos.",
+        "Analisis de vulnerabilidades y elaboracion de informes tecnicos/ejecutivos con evidencia, impacto y remediacion.",
+        "Participacion en iniciativas de seguridad ofensiva y evaluacion de exposicion."
+      ]
+    },
+    {
+      "role": "Cybersecurity Analyst",
+      "company": "Informatica y Tecnologia Stefanini S.A.",
+      "period": "Oct 2022 - Ene 2025",
+      "modality": "Remoto",
+      "highlights": [
+        "Ejecucion de auditorias tecnicas y pruebas de penetracion sobre activos corporativos.",
+        "Apoyo en analisis de vulnerabilidades, gestion de riesgos y fortalecimiento de controles.",
+        "Soporte a monitoreo, documentacion tecnica, gestion de incidentes y acompanamiento a negocio."
+      ]
+    },
+    {
+      "role": "Gestor de Ciberseguridad / Configuracion / Infraestructura / Sistemas",
+      "company": "Alcanos de Colombia S.A. E.S.P.",
+      "period": "Jun 2012 - Oct 2022",
+      "modality": "Presencial/Remoto",
+      "highlights": [
+        "Evolucion profesional desde soporte e infraestructura hasta ciberseguridad en entornos empresariales.",
+        "Apoyo a seguridad perimetral, certificados SSL, control de versiones con Git y continuidad operativa.",
+        "Ejecucion de auditorias tecnicas, pentesting y evaluacion de seguridad de aplicaciones y servicios web."
+      ]
+    }
+  ],
+  "certifications": [
+    "eJPTv2 - INE (2024)",
+    "CAPC - Certiprof (2024)",
+    "LCSPC - Certiprof (2023)",
+    "ISO 27001 Lead Auditor (2022)",
+    "Sophos ET80 XG Firewall (2019)"
+  ],
+  "education": [
+    "Maestria en Seguridad Informatica - UNIR, Espana (2023)",
+    "Ingenieria de Sistemas - CORHUILA, Neiva (2021)",
+    "Tecnologo en Ensamble y Mantenimiento de Computadores y Redes - SENA, Neiva (2012)"
+  ],
+  "languages": [
+    "Espanol: Nativo",
+    "Ingles: Lectura y escritura"
+  ],
+  "skills": [
+    "Burp Suite Pro",
+    "OWASP ZAP",
+    "Nmap",
+    "Nessus",
+    "Metasploit",
+    "Impacket",
+    "BloodHound",
+    "Mimikatz",
+    "Hashcat",
+    "Wireshark",
+    "Nuclei",
+    "Amass",
+    "Active Directory",
+    "Linux",
+    "Windows Server",
+    "Docker",
+    "VMware",
+    "Git",
+    "Postman",
+    "MobSF"
+  ]
+}

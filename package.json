@@ -1,0 +1,11 @@
+{
+  "name": "cv-daniel-galindo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CV online de ciberseguridad con sincronizacion HTB",
+  "type": "module",
+  "scripts": {
+    "sync:htb": "node ./scripts/sync-htb.mjs",
+    "serve": "python3 -m http.server 8080"
+  }
+}
