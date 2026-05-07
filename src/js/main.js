@@ -1,11 +1,67 @@
-const profileUrl = "./src/data/profile.json";
-const htbUrl = "./src/data/htb.json";
+const pageLang = document.documentElement.lang === "en" ? "en" : "es";
+const isEnglish = pageLang === "en";
+const locale = isEnglish ? "en-US" : "es-CO";
+const profileUrl = isEnglish ? "/src/data/profile.en.json" : "/src/data/profile.json";
+const htbUrl = "/src/data/htb.json";
+
+const copy = {
+  ticker: isEnglish
+    ? [
+        "Starting attack surface assessment...",
+        "Correlating technical findings with business risk...",
+        "Designing remediation strategies across IT/OT...",
+        "Ready for offensive security operations."
+      ]
+    : [
+        "Iniciando evaluación de superficie de ataque...",
+        "Correlacionando hallazgos técnicos y riesgo de negocio...",
+        "Diseñando estrategias de remediación en TI/TO...",
+        "Listo para operaciones de seguridad ofensiva."
+      ],
+  careerLabels: isEnglish
+    ? {
+        years: "Years of experience",
+        certs: "Key certifications",
+        roles: "Professional roles",
+        availability: "Availability",
+        remote: "Global remote"
+      }
+    : {
+        years: "Años de experiencia",
+        certs: "Certificaciones clave",
+        roles: "Roles profesionales",
+        availability: "Disponibilidad",
+        remote: "Remoto global"
+      },
+  htbLabels: isEnglish
+    ? {
+        rank: "HTB RANK",
+        points: "Points",
+        level: "Level",
+        user: "User Machines",
+        root: "Root Machines",
+        challenges: "Challenges Solved"
+      }
+    : {
+        rank: "HTB RANK",
+        points: "Puntos",
+        level: "Nivel",
+        user: "Máquinas User",
+        root: "Máquinas Root",
+        challenges: "Retos Resueltos"
+      },
+  updatedAt: isEnglish ? "Updated" : "Actualizado",
+  pendingSync: isEnglish ? "Sync pending" : "Sincronización pendiente",
+  loadError: isEnglish ? "Could not load" : "No se pudo cargar",
+  profileError: isEnglish ? "Error loading profile content." : "Error cargando el contenido del perfil."
+};
 
 const byId = (id) => document.getElementById(id);
 
-const safeText = (value, fallback = "No disponible") => (value ? String(value) : fallback);
+const safeText = (value, fallback = isEnglish ? "Not available" : "No disponible") =>
+  value ? String(value) : fallback;
 
-const formatNumber = (value) => new Intl.NumberFormat("es-CO").format(value);
+const formatNumber = (value) => new Intl.NumberFormat(locale).format(value);
 
 function setActiveNav() {
   const page = document.body.dataset.page;
@@ -130,12 +186,7 @@ function setHero(profile) {
 
   byId("summary").textContent = safeText(profile.summary);
 
-  runTerminalTicker([
-    "Iniciando evaluación de superficie de ataque...",
-    "Correlacionando hallazgos técnicos y riesgo de negocio...",
-    "Diseñando estrategias de remediación en TI/TO...",
-    "Listo para operaciones de seguridad ofensiva."
-  ]);
+  runTerminalTicker(copy.ticker);
 }
 
 function renderSimpleList(id, values) {
@@ -194,10 +245,10 @@ function renderCareerMetrics(profile) {
   const yearsOfExperience = Math.max(currentYear - earliestYear, 1);
 
   const metrics = [
-    { label: "Años de experiencia", value: yearsOfExperience },
-    { label: "Certificaciones clave", value: (profile.certifications || []).length },
-    { label: "Roles profesionales", value: (profile.experience || []).length },
-    { label: "Disponibilidad", value: "Remoto global" }
+    { label: copy.careerLabels.years, value: yearsOfExperience },
+    { label: copy.careerLabels.certs, value: (profile.certifications || []).length },
+    { label: copy.careerLabels.roles, value: (profile.experience || []).length },
+    { label: copy.careerLabels.availability, value: copy.careerLabels.remote }
   ];
 
   metrics.forEach((metric) => {
@@ -227,12 +278,12 @@ function renderHtb(htb) {
   cards.innerHTML = "";
 
   const fields = [
-    { label: "HTB RANK", value: htb.htbRank },
-    { label: "Puntos", value: htb.points },
-    { label: "Nivel", value: htb.level },
-    { label: "Máquinas User", value: htb.userOwns },
-    { label: "Máquinas Root", value: htb.rootOwns },
-    { label: "Retos Resueltos", value: htb.challengesSolved }
+    { label: copy.htbLabels.rank, value: htb.htbRank },
+    { label: copy.htbLabels.points, value: htb.points },
+    { label: copy.htbLabels.level, value: htb.level },
+    { label: copy.htbLabels.user, value: htb.userOwns },
+    { label: copy.htbLabels.root, value: htb.rootOwns },
+    { label: copy.htbLabels.challenges, value: htb.challengesSolved }
   ];
 
   fields.forEach((field) => {
@@ -240,8 +291,8 @@ function renderHtb(htb) {
   });
 
   syncDate.textContent = htb.updatedAt
-    ? `Actualizado: ${new Date(htb.updatedAt).toLocaleString("es-CO")}`
-    : "Sincronización pendiente";
+    ? `${copy.updatedAt}: ${new Date(htb.updatedAt).toLocaleString(locale)}`
+    : copy.pendingSync;
 
   note.textContent = htb.note ? String(htb.note) : "";
   note.hidden = note.textContent.trim().length === 0;
@@ -270,7 +321,7 @@ function enableRevealAnimations() {
 async function loadJson(path) {
   const response = await fetch(path);
   if (!response.ok) {
-    throw new Error(`No se pudo cargar ${path}`);
+    throw new Error(`${copy.loadError} ${path}`);
   }
   return response.json();
 }
@@ -288,7 +339,7 @@ async function bootstrap() {
     renderHtb(htb || {});
     enableRevealAnimations();
   } catch (error) {
-    byId("summary").textContent = "Error cargando el contenido del perfil.";
+    byId("summary").textContent = copy.profileError;
     const htbNote = byId("htb-note");
     if (htbNote) {
       htbNote.textContent = error.message;

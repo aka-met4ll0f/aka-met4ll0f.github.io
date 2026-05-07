@@ -1,4 +1,6 @@
-const contentFile = "./src/data/content.json";
+const pageLang = document.documentElement.lang === "en" ? "en" : "es";
+const isEnglish = pageLang === "en";
+const contentFile = isEnglish ? "/src/data/content.en.json" : "/src/data/content.json";
 
 function createMiniCard(item, ctaLabel) {
   const card = document.createElement("article");
@@ -58,8 +60,8 @@ async function loadPreview() {
     return;
   }
   const data = await response.json();
-  mountPreview("writeups-preview", data.writeups || [], "Abrir writeup");
-  mountPreview("scripts-preview", data.scripts || [], "Ver script");
+  mountPreview("writeups-preview", data.writeups || [], isEnglish ? "Open writeup" : "Abrir writeup");
+  mountPreview("scripts-preview", data.scripts || [], isEnglish ? "View script" : "Ver script");
   revealCards();
 }
 

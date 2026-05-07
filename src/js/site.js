@@ -1,9 +1,15 @@
-const profilePath = "./src/data/profile.json";
+const pageLang = document.documentElement.lang === "en" ? "en" : "es";
+const isEnglish = pageLang === "en";
+const profilePath = isEnglish ? "/src/data/profile.en.json" : "/src/data/profile.json";
 
 async function loadProfile() {
   const response = await fetch(profilePath);
   if (!response.ok) {
-    throw new Error("No fue posible cargar la información del perfil.");
+    throw new Error(
+      isEnglish
+        ? "Could not load profile information."
+        : "No fue posible cargar la información del perfil."
+    );
   }
   return response.json();
 }
@@ -43,12 +49,12 @@ async function bootstrapSite() {
     const profile = await loadProfile();
     setText(".js-name", profile.name || "");
     setText(".js-headline", profile.headline || "");
-    setText(".js-location", `${profile.location || ""} — ${profile.availability || ""}`);
+    setText(".js-location", `${profile.location || ""} - ${profile.availability || ""}`);
     setLink(".js-github", profile.contact?.github || "#");
     setLink(".js-linkedin", profile.contact?.linkedin || "#");
     setLink(".js-htb", profile.contact?.hackTheBox || "#");
   } catch (error) {
-    setText(".js-name", "Perfil no disponible");
+    setText(".js-name", isEnglish ? "Profile unavailable" : "Perfil no disponible");
     setText(".js-headline", error.message);
   }
 

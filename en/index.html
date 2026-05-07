@@ -1,42 +1,42 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Portafolio ofensivo y CV en línea de Daniel Felipe Galindo Arias, Consultor Senior de Ciberseguridad y Ethical Hacking."
+      content="Offensive security portfolio and online CV of Daniel Felipe Galindo Arias, Senior Cybersecurity Consultant and Ethical Hacker."
     />
     <meta name="theme-color" content="#08120f" />
-    <title>Daniel Felipe Galindo Arias | Portafolio de Seguridad Ofensiva</title>
+    <title>Daniel Felipe Galindo Arias | Offensive Security Portfolio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./src/styles/styles.css" />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
   </head>
-  <body data-page="inicio">
+  <body data-page="home">
     <div class="grid-overlay" aria-hidden="true"></div>
     <div class="noise-overlay" aria-hidden="true"></div>
 
     <header class="site-header">
-      <a class="site-logo" href="./index.html">met4ll0f</a>
-      <nav class="site-nav" aria-label="Navegación principal">
-        <a data-nav="inicio" href="./index.html">Inicio</a>
-        <a data-nav="writeups" href="./writeups.html">Writeups</a>
-        <a data-nav="scripts" href="./scripts.html">Scripts</a>
-        <a href="/en/index.html">EN</a>
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+        <a href="/index.html">ES</a>
       </nav>
     </header>
 
     <section class="hero" id="top">
       <div class="hero-shell">
         <div class="hero-copy">
-          <p class="hero-kicker">Portafolio de Seguridad Ofensiva</p>
+          <p class="hero-kicker">Offensive Security Portfolio</p>
           <h1 id="name">Daniel Felipe Galindo Arias</h1>
-          <p id="headline" class="headline">Consultor Sénior de Ciberseguridad — Pentester — Red Teamer — Ethical Hacker — TI/TO</p>
+          <p id="headline" class="headline">Senior Cybersecurity Consultant - Pentester - Red Teamer - Ethical Hacker - IT/OT</p>
           <p id="location" class="meta"></p>
           <div class="terminal-line" aria-live="polite">
             <span class="prompt">root@met4ll0f:~$</span>
@@ -44,72 +44,72 @@
             <span class="cursor" aria-hidden="true"></span>
           </div>
 
-          <nav class="top-links" aria-label="Enlaces principales">
+          <nav class="top-links" aria-label="Main links">
             <a id="github-link" href="#" target="_blank" rel="noreferrer noopener">GitHub</a>
             <a id="linkedin-link" href="#" target="_blank" rel="noreferrer noopener">LinkedIn</a>
             <a id="htb-link" href="#" target="_blank" rel="noreferrer noopener">Hack The Box</a>
           </nav>
         </div>
         <figure class="hero-figure">
-          <img class="hero-photo" src="./src/images/perfil.jpeg" alt="Retrato profesional de Daniel Galindo" />
+          <img class="hero-photo" src="/src/images/perfil.jpeg" alt="Professional portrait of Daniel Galindo" />
         </figure>
       </div>
     </section>
 
     <main class="layout">
       <section class="panel panel-large" aria-labelledby="about-title">
-        <h2 id="about-title">Perfil</h2>
+        <h2 id="about-title">Profile</h2>
         <p id="summary"></p>
       </section>
 
       <section class="panel panel-large" aria-labelledby="library-title">
-        <h2 id="library-title">Biblioteca Técnica</h2>
+        <h2 id="library-title">Technical Library</h2>
         <div class="quick-grid">
-          <a class="quick-card" href="./writeups.html">
+          <a class="quick-card" href="/en/writeups.html">
             <h3>Writeups</h3>
-            <p>Resolución de máquinas, cadenas de ataque y escalamiento de privilegios.</p>
+            <p>Machine walkthroughs, attack chains, and privilege escalation paths.</p>
           </a>
-          <a class="quick-card" href="./scripts.html">
+          <a class="quick-card" href="/en/scripts.html">
             <h3>Scripts</h3>
-            <p>Automatizaciones para reconocimiento, auditoría y validación técnica.</p>
+            <p>Automation for reconnaissance, auditing, and technical validation.</p>
           </a>
         </div>
       </section>
 
       <section class="panel" aria-labelledby="metrics-title">
-        <h2 id="metrics-title">Indicadores Profesionales</h2>
+        <h2 id="metrics-title">Professional Metrics</h2>
         <div id="career-metrics" class="stats-grid"></div>
       </section>
 
       <section class="panel" aria-labelledby="focus-title">
-        <h2 id="focus-title">Foco Profesional</h2>
+        <h2 id="focus-title">Professional Focus</h2>
         <ul id="focus-list" class="stack-list"></ul>
       </section>
 
       <section class="panel" aria-labelledby="cert-title">
-        <h2 id="cert-title">Certificaciones</h2>
+        <h2 id="cert-title">Certifications</h2>
         <ul id="cert-list" class="stack-list"></ul>
       </section>
 
       <section class="panel" aria-labelledby="education-title">
-        <h2 id="education-title">Formación</h2>
+        <h2 id="education-title">Education</h2>
         <ul id="education-list" class="stack-list"></ul>
       </section>
 
       <section class="panel panel-large" aria-labelledby="experience-title">
-        <h2 id="experience-title">Experiencia Profesional</h2>
+        <h2 id="experience-title">Professional Experience</h2>
         <div id="experience-list" class="timeline"></div>
       </section>
 
       <section class="panel" aria-labelledby="skills-title">
-        <h2 id="skills-title">Stack Técnico</h2>
+        <h2 id="skills-title">Technical Stack</h2>
         <ul id="skills-list" class="pill-list"></ul>
       </section>
 
       <section class="panel" aria-labelledby="htb-title">
         <div class="panel-title-row">
           <h2 id="htb-title">Hack The Box</h2>
-          <span id="htb-sync-date" class="tag">Sincronización pendiente</span>
+          <span id="htb-sync-date" class="tag">Sync pending</span>
         </div>
         <div id="htb-cards" class="stats-grid"></div>
         <div class="panel-note" id="htb-note"></div>
@@ -117,16 +117,16 @@
 
       <section class="panel panel-large" aria-labelledby="latest-writeups-title">
         <div class="panel-title-row">
-          <h2 id="latest-writeups-title">Últimos writeups</h2>
-          <a class="entry-link" href="./writeups.html">Ver todos</a>
+          <h2 id="latest-writeups-title">Latest writeups</h2>
+          <a class="entry-link" href="/en/writeups.html">View all</a>
         </div>
         <div id="writeups-preview" class="entry-grid"></div>
       </section>
 
       <section class="panel panel-large" aria-labelledby="latest-scripts-title">
         <div class="panel-title-row">
-          <h2 id="latest-scripts-title">Scripts destacados</h2>
-          <a class="entry-link" href="./scripts.html">Ver todos</a>
+          <h2 id="latest-scripts-title">Featured scripts</h2>
+          <a class="entry-link" href="/en/scripts.html">View all</a>
         </div>
         <div id="scripts-preview" class="entry-grid"></div>
       </section>
@@ -134,13 +134,13 @@
 
     <footer class="footer">
       <p>
-        Disponible para proyectos de seguridad ofensiva, pentesting web/API/AD y evaluaciones TI/TO.
+        Available for offensive security projects, web/API/AD pentesting, and IT/OT assessments.
       </p>
       <p>© <span class="js-year"></span> Daniel Galindo.</p>
-      <a href="#top">Volver arriba</a>
+      <a href="#top">Back to top</a>
     </footer>
 
-    <script type="module" src="./src/js/main.js"></script>
-    <script type="module" src="./src/js/index-feed.js"></script>
+    <script type="module" src="/src/js/main.js"></script>
+    <script type="module" src="/src/js/index-feed.js"></script>
   </body>
 </html>

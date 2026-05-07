@@ -1,4 +1,7 @@
-const contentPath = "./src/data/content.json";
+const pageLang = document.documentElement.lang === "en" ? "en" : "es";
+const isEnglish = pageLang === "en";
+const locale = isEnglish ? "en-US" : "es-CO";
+const contentPath = isEnglish ? "/src/data/content.en.json" : "/src/data/content.json";
 const githubApiBase = "https://api.github.com/repos/";
 
 function parseGitHubRepo(url) {
@@ -23,7 +26,7 @@ function formatDate(dateValue) {
   if (Number.isNaN(date.getTime())) {
     return null;
   }
-  return date.toLocaleDateString("es-CO", {
+  return date.toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "2-digit"
@@ -67,7 +70,9 @@ function buildCard(item, pageType) {
     badges.appendChild(createBadge(item.type, "type"));
   }
   if (item.updatedAtFormatted) {
-    badges.appendChild(createBadge(`Actualizado: ${item.updatedAtFormatted}`, "updated"));
+    badges.appendChild(
+      createBadge(`${isEnglish ? "Updated" : "Actualizado"}: ${item.updatedAtFormatted}`, "updated")
+    );
   }
 
   const summary = document.createElement("p");
@@ -86,7 +91,7 @@ function buildCard(item, pageType) {
     code.href = item.url;
     code.target = "_blank";
     code.rel = "noreferrer noopener";
-    code.textContent = "Ver código";
+    code.textContent = isEnglish ? "View code" : "Ver código";
     actions.appendChild(code);
 
     if (item.readmeUrl) {
@@ -95,7 +100,7 @@ function buildCard(item, pageType) {
       readme.href = item.readmeUrl;
       readme.target = "_blank";
       readme.rel = "noreferrer noopener";
-      readme.textContent = "Ver README";
+      readme.textContent = isEnglish ? "View README" : "Ver README";
       actions.appendChild(readme);
     }
   } else if (item.url) {
@@ -104,7 +109,14 @@ function buildCard(item, pageType) {
     link.href = item.url;
     link.target = "_blank";
     link.rel = "noreferrer noopener";
-    link.textContent = pageType === "writeups" ? "Ver writeup" : "Abrir recurso";
+    link.textContent =
+      pageType === "writeups"
+        ? isEnglish
+          ? "View writeup"
+          : "Ver writeup"
+        : isEnglish
+          ? "Open resource"
+          : "Abrir recurso";
     actions.appendChild(link);
   }
 
@@ -117,7 +129,9 @@ function mountCards(root, data, pageType) {
   if (!data || data.length === 0) {
     const empty = document.createElement("p");
     empty.className = "empty-note";
-    empty.textContent = "Aún no hay contenido publicado en esta sección.";
+    empty.textContent = isEnglish
+      ? "No content has been published in this section yet."
+      : "Aún no hay contenido publicado en esta sección.";
     root.appendChild(empty);
     return;
   }
@@ -215,7 +229,11 @@ async function loadCollections() {
 
   const response = await fetch(contentPath);
   if (!response.ok) {
-    throw new Error("No fue posible cargar la biblioteca de contenidos.");
+    throw new Error(
+      isEnglish
+        ? "Could not load the content library."
+        : "No fue posible cargar la biblioteca de contenidos."
+    );
   }
 
   const content = await response.json();

@@ -1,0 +1,70 @@
+{
+  "writeups": [
+    {
+      "title": "HTB Writeup: Fluffy",
+      "date": "2025-10-31",
+      "platform": "Hack The Box",
+      "summary": "Active Directory attack chain from initial credentials, Kerberoasting, and AD CS (ESC16) abuse to Administrator authentication.",
+      "tags": ["Active Directory", "Kerberoasting", "AD CS", "ESC16"],
+      "url": "/writeups/fluffy.html"
+    },
+    {
+      "title": "HTB Writeup: Postman",
+      "date": "2025-11-11",
+      "platform": "Hack The Box",
+      "summary": "Initial access through unauthenticated Redis, SSH pivot with public key, and local privilege escalation through Webmin to gain root.",
+      "tags": ["Redis", "SSH", "Webmin", "Linux"],
+      "url": "/writeups/postman.html"
+    },
+    {
+      "title": "HTB Writeup: Trick",
+      "date": "2025-11-09",
+      "platform": "Hack The Box",
+      "summary": "Web environment compromise using SQLi and LFI, SSH key recovery, and privilege escalation by manipulating fail2ban rules.",
+      "tags": ["SQL Injection", "LFI", "SSH", "Fail2ban"],
+      "url": "/writeups/trick.html"
+    }
+  ],
+  "scripts": [
+    {
+      "title": "pcap-forensics",
+      "language": "Python",
+      "type": "Network forensics",
+      "summary": "Includes analisis_pcap.py to inspect PCAP/PCAPNG files with tshark and generate Markdown reports, plus tor_tunnel.sh to route traffic through Tor, capture evidence, and summarize findings in lab environments.",
+      "tags": ["PCAP", "Forensics", "tshark", "Tor", "Report"],
+      "url": "https://github.com/aka-met4ll0f/pcap-forensics"
+    },
+    {
+      "title": "recon-toolkit",
+      "language": "Bash",
+      "type": "Offensive reconnaissance",
+      "summary": "Web and DNS reconnaissance toolkit with scripts such as dns_info_check.sh, recon_web.sh, and nmap_scan.sh, plus Python utilities for ffuf, technology fingerprinting, and Nmap output conversion to HTML/XLSX.",
+      "tags": ["Recon", "DNS", "Nmap", "ffuf", "OSINT"],
+      "url": "https://github.com/aka-met4ll0f/recon-toolkit"
+    },
+    {
+      "title": "username-generator",
+      "language": "Python",
+      "type": "Identity automation",
+      "summary": "Contains gen_users.py to generate usernames from CSV/XLSX, normalize characters, apply consistent formatting, remove duplicates, and separate invalid entries into output files.",
+      "tags": ["CSV", "XLSX", "Users", "Automation"],
+      "url": "https://github.com/aka-met4ll0f/username-generator"
+    },
+    {
+      "title": "web-screenshot-reporter",
+      "language": "Shell",
+      "type": "Visual evidence",
+      "summary": "Includes web_screenshot_report.sh to capture web screenshots in batch mode and build a navigable index.html with visual evidence for surface and asset reviews.",
+      "tags": ["Screenshots", "Bash", "Report", "Web"],
+      "url": "https://github.com/aka-met4ll0f/web-screenshot-reporter"
+    },
+    {
+      "title": "pentest-lab-scripts",
+      "language": "Python",
+      "type": "Offensive lab",
+      "summary": "Collection of scripts for controlled environments, including proxynova_save_per_user.py, xmlrpc_brute_force.py, wpscan_reporter.py, and webadmin_exploit_lab.py for authorized testing, evidence collection, and offensive behavior validation.",
+      "tags": ["Pentest", "WordPress", "WPScan", "Lab"],
+      "url": "https://github.com/aka-met4ll0f/pentest-lab-scripts"
+    }
+  ]
+}

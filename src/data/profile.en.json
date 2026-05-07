@@ -1,0 +1,93 @@
+{
+  "name": "Daniel Felipe Galindo Arias",
+  "headline": "Senior Cybersecurity Consultant - Pentester - Red Teamer - Ethical Hacker - IT/OT",
+  "location": "Neiva, Huila, Colombia",
+  "availability": "Available for remote work worldwide",
+  "summary": "Master in Information Security with more than 15 years of experience in cybersecurity, offensive security, and technology risk management. Specialized in penetration testing, ethical hacking, Red Team operations, vulnerability analysis, and control assessments in IT/OT environments. Strong background in GNU/Linux, Windows, Active Directory, virtualization, web servers, hardening, and incident response with a focus on operational continuity and resilience.",
+  "contact": {
+    "github": "https://github.com/aka-met4ll0f",
+    "linkedin": "https://linkedin.com/in/daniel-galindoa",
+    "hackTheBox": "https://app.hackthebox.com/public/users/886162"
+  },
+  "professionalFocus": [
+    "Red Team operations and penetration testing",
+    "Technical cybersecurity auditing",
+    "Vulnerability assessment",
+    "IT and OT security",
+    "Application and API security",
+    "Web, Android, API, and Active Directory pentesting"
+  ],
+  "experience": [
+    {
+      "role": "Senior Cybersecurity and Ethical Hacking Consultant",
+      "company": "KPMG Advisory, Tax & Legal S.A.S.",
+      "period": "Feb 2025 - Present",
+      "modality": "Remote",
+      "highlights": [
+        "Execution of technical audits, penetration testing, and security assessments for applications, web services, and corporate assets.",
+        "Vulnerability analysis and delivery of technical/executive reports with evidence, impact, and remediation guidance.",
+        "Participation in offensive security initiatives and exposure assessment activities."
+      ]
+    },
+    {
+      "role": "Cybersecurity Analyst",
+      "company": "Informatica y Tecnologia Stefanini S.A.",
+      "period": "Oct 2022 - Jan 2025",
+      "modality": "Remote",
+      "highlights": [
+        "Execution of technical audits and penetration tests across corporate assets.",
+        "Support in vulnerability analysis, risk management, and control strengthening.",
+        "Support for security monitoring, technical documentation, incident management, and business-facing coordination."
+      ]
+    },
+    {
+      "role": "Cybersecurity / Configuration / Infrastructure / Systems Manager",
+      "company": "Alcanos de Colombia S.A. E.S.P.",
+      "period": "Jun 2012 - Oct 2022",
+      "modality": "On-site/Remote",
+      "highlights": [
+        "Professional growth from support and infrastructure into cybersecurity across enterprise environments.",
+        "Support for perimeter security, SSL certificates, Git-based version control, and operational continuity.",
+        "Execution of technical audits, penetration testing, and security assessments of applications and web services."
+      ]
+    }
+  ],
+  "certifications": [
+    "eJPTv2 - INE (2024)",
+    "CAPC - Certiprof (2024)",
+    "LCSPC - Certiprof (2023)",
+    "ISO 27001 Lead Auditor (2022)",
+    "Sophos ET80 XG Firewall (2019)"
+  ],
+  "education": [
+    "Master's Degree in Information Security - UNIR, Spain (2023)",
+    "Systems Engineering - CORHUILA, Neiva (2021)",
+    "Technology Degree in Computer and Network Assembly and Maintenance - SENA, Neiva (2012)"
+  ],
+  "languages": [
+    "Spanish: Native",
+    "English: Reading and writing"
+  ],
+  "skills": [
+    "Burp Suite Pro",
+    "OWASP ZAP",
+    "Nmap",
+    "Nessus",
+    "Metasploit",
+    "Impacket",
+    "BloodHound",
+    "Mimikatz",
+    "Hashcat",
+    "Wireshark",
+    "Nuclei",
+    "Amass",
+    "Active Directory",
+    "Linux",
+    "Windows Server",
+    "Docker",
+    "VMware",
+    "Git",
+    "Postman",
+    "MobSF"
+  ]
+}
