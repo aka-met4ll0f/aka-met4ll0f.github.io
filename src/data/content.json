@@ -1,95 +1,70 @@
 {
   "writeups": [
     {
-      "title": "Writeup HTB: Builder",
-      "date": "2026-04-23",
+      "title": "Writeup HTB: Fluffy",
+      "date": "2025-10-31",
       "platform": "Hack The Box",
-      "summary": "Explotación de Jenkins vulnerable a CVE-2024-23897, pivoteo de credenciales y escalamiento de privilegios hasta root.",
-      "tags": ["Jenkins", "CVE-2024-23897", "Linux", "PrivEsc"],
-      "url": "#"
+      "summary": "Cadena AD desde credenciales iniciales, Kerberoasting y abuso de AD CS (ESC16) hasta autenticación como Administrator.",
+      "tags": ["Active Directory", "Kerberoasting", "AD CS", "ESC16"],
+      "url": "./writeups/fluffy.html"
     },
     {
-      "title": "Writeup HTB: Active",
-      "date": "2026-03-16",
+      "title": "Writeup HTB: Postman",
+      "date": "2025-11-11",
       "platform": "Hack The Box",
-      "summary": "Enumeración SMB y Active Directory, abuso de GPP y ataque Kerberoasting para obtención de privilegios elevados.",
-      "tags": ["Active Directory", "SMB", "Kerberoasting", "Windows"],
-      "url": "#"
+      "summary": "Acceso inicial por Redis sin autenticación, pivote a SSH con clave pública y escalada local mediante Webmin para obtener root.",
+      "tags": ["Redis", "SSH", "Webmin", "Linux"],
+      "url": "./writeups/postman.html"
     },
     {
-      "title": "Análisis de API: IDOR + Autorización rota",
-      "date": "2026-02-10",
-      "platform": "Proyecto privado",
-      "summary": "Cadena de fallos en API REST que permitió acceso horizontal a recursos de terceros por control de acceso insuficiente.",
-      "tags": ["API", "IDOR", "OWASP API Top 10"],
-      "url": "#"
+      "title": "Writeup HTB: Trick",
+      "date": "2025-11-09",
+      "platform": "Hack The Box",
+      "summary": "Compromiso de entorno web con SQLi y LFI, recuperación de clave SSH y escalada vía manipulación de reglas fail2ban.",
+      "tags": ["SQL Injection", "LFI", "SSH", "Fail2ban"],
+      "url": "./writeups/trick.html"
     }
   ],
   "scripts": [
     {
-      "title": "ReconScope",
+      "title": "pcap-forensics",
       "language": "Python",
-      "type": "Automatización",
-      "summary": "Pipeline de reconocimiento que integra subdominios, puertos, tecnologías y toma de capturas para triage.",
-      "tags": ["Python", "Recon", "Nmap", "Subfinder"],
-      "url": "#"
+      "type": "Forense de red",
+      "summary": "Incluye analisis_pcap.py para analizar archivos PCAP/PCAPNG con tshark y generar reportes Markdown, y tor_tunnel.sh para enrutar trafico por Tor, capturar evidencia y resumir resultados en laboratorio.",
+      "tags": ["PCAP", "Forense", "tshark", "Tor", "Reporte"],
+      "url": "https://github.com/aka-met4ll0f/pcap-forensics"
     },
     {
-      "title": "AD Quick Audit",
+      "title": "recon-toolkit",
       "language": "Bash",
-      "type": "Auditoría",
-      "summary": "Script de auditoría rápida para revisar exposición básica de Active Directory y malas configuraciones frecuentes.",
-      "tags": ["Active Directory", "Bash", "Hardening"],
-      "url": "#"
+      "type": "Reconocimiento ofensivo",
+      "summary": "Toolkit de reconocimiento web y DNS con scripts como dns_info_check.sh, recon_web.sh y nmap_scan.sh, ademas de utilidades Python para ffuf, fingerprinting tecnologico y conversion de resultados Nmap a HTML/XLSX.",
+      "tags": ["Recon", "DNS", "Nmap", "ffuf", "OSINT"],
+      "url": "https://github.com/aka-met4ll0f/recon-toolkit"
     },
     {
-      "title": "API Fuzz Starter",
-      "language": "JavaScript",
-      "type": "Testing",
-      "summary": "Colección base para fuzzing de endpoints y validación de respuestas inseguras en APIs internas.",
-      "tags": ["API", "Fuzzing", "Node.js"],
-      "url": "#"
-    }
-  ],
-  "exploits": [
-    {
-      "title": "PoC: Inyección de comandos en utilitario de conversión",
-      "status": "Responsable",
-      "type": "RCE",
-      "summary": "Prueba de concepto en entorno controlado para demostrar ejecución remota por sanitización insuficiente de parámetros.",
-      "tags": ["RCE", "Command Injection", "Linux"],
-      "url": "#"
+      "title": "username-generator",
+      "language": "Python",
+      "type": "Automatizacion de identidades",
+      "summary": "Contiene gen_users.py para generar usuarios desde CSV/XLSX, normalizar caracteres, aplicar formato uniforme, eliminar duplicados y separar entradas invalidas en archivos de salida.",
+      "tags": ["CSV", "XLSX", "Usuarios", "Automatizacion"],
+      "url": "https://github.com/aka-met4ll0f/username-generator"
     },
     {
-      "title": "PoC: Deserialización insegura en servicio interno",
-      "status": "En divulgación coordinada",
-      "type": "Deserialización",
-      "summary": "Cadena de explotación orientada a validar impacto real y trazabilidad de ejecución en servicio corporativo.",
-      "tags": ["Deserialización", "Java", "Seguridad de aplicaciones"],
-      "url": "#"
-    }
-  ],
-  "recursos": [
-    {
-      "title": "Checklist de Pentesting Web",
-      "type": "Guía",
-      "summary": "Lista práctica para pruebas web basada en OWASP ASVS y experiencia de campo en auditorías técnicas.",
-      "tags": ["OWASP", "Checklist", "Web"],
-      "url": "#"
+      "title": "web-screenshot-reporter",
+      "language": "Shell",
+      "type": "Evidencia visual",
+      "summary": "Incluye web_screenshot_report.sh para capturar pantallas web por lotes y construir un index.html navegable con evidencias visuales de superficies y activos web.",
+      "tags": ["Screenshots", "Bash", "Reporte", "Web"],
+      "url": "https://github.com/aka-met4ll0f/web-screenshot-reporter"
     },
     {
-      "title": "Plantilla de reporte ejecutivo",
-      "type": "Plantilla",
-      "summary": "Formato para traducir hallazgos técnicos a impacto de negocio con prioridades de remediación.",
-      "tags": ["Reporting", "Riesgo", "Cliente"],
-      "url": "#"
-    },
-    {
-      "title": "Mapa de aprendizaje TI/TO",
-      "type": "Ruta de estudio",
-      "summary": "Ruta sugerida para fortalecer habilidades en convergencia TI/TO y seguridad de infraestructuras críticas.",
-      "tags": ["TI/TO", "OT", "ICS"],
-      "url": "#"
+      "title": "pentest-lab-scripts",
+      "language": "Python",
+      "type": "Laboratorio ofensivo",
+      "summary": "Coleccion de scripts para entornos controlados: proxynova_save_per_user.py, xmlrpc_brute_force.py, wpscan_reporter.py y webadmin_exploit_lab.py para pruebas autorizadas, recoleccion de evidencia y validacion de comportamiento ofensivo.",
+      "tags": ["Pentest", "WordPress", "WPScan", "Laboratorio"],
+      "url": "https://github.com/aka-met4ll0f/pentest-lab-scripts"
     }
   ]
 }

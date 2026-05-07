@@ -17,8 +17,6 @@ CV online estilo Offensive Portfolio (Opción 3), preparado para GitHub Pages y 
 - index.html
 - writeups.html
 - scripts.html
-- exploits.html
-- recursos.html
 - package.json
 ```
 
@@ -27,9 +25,9 @@ CV online estilo Offensive Portfolio (Opción 3), preparado para GitHub Pages y 
 - `index.html`: perfil profesional, métricas, experiencia y destacados.
 - `writeups.html`: biblioteca de writeups técnicos.
 - `scripts.html`: automatizaciones y utilidades de seguridad.
-- `exploits.html`: pruebas de concepto y explotación controlada.
-- `recursos.html`: plantillas, guías y material de estudio.
 - `src/data/content.json`: fuente de contenido de las páginas adicionales.
+
+Nota: la sección de recursos fue removida temporalmente hasta organizar el contenido.
 
 ## Cómo subir nuevos writeups
 
@@ -53,7 +51,7 @@ CV online estilo Offensive Portfolio (Opción 3), preparado para GitHub Pages y 
 
 Notas:
 - Si aún no tienes URL pública del writeup, deja `"url": "#"` temporalmente.
-- Si el writeup estará en este mismo repo (por ejemplo Markdown convertido a HTML), usa esa ruta local en `url`.
+- Si el writeup estará en este mismo repo, usa rutas como `./writeups/fluffy.html`.
 
 ## Despliegue en GitHub Pages
 

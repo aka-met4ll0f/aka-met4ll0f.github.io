@@ -140,6 +140,9 @@ function setHero(profile) {
 
 function renderSimpleList(id, values) {
   const root = byId(id);
+  if (!root) {
+    return;
+  }
   root.innerHTML = "";
   values.forEach((value) => {
     const li = document.createElement("li");
@@ -214,6 +217,13 @@ function renderSkills(skills) {
 
 function renderHtb(htb) {
   const cards = byId("htb-cards");
+  const syncDate = byId("htb-sync-date");
+  const note = byId("htb-note");
+
+  if (!cards || !syncDate || !note) {
+    return;
+  }
+
   cards.innerHTML = "";
 
   const fields = [
@@ -229,11 +239,10 @@ function renderHtb(htb) {
     cards.appendChild(createStatCard(field.label, field.value, typeof field.value === "number"));
   });
 
-  byId("htb-sync-date").textContent = htb.updatedAt
+  syncDate.textContent = htb.updatedAt
     ? `Actualizado: ${new Date(htb.updatedAt).toLocaleString("es-CO")}`
     : "Sincronización pendiente";
 
-  const note = byId("htb-note");
   note.textContent = safeText(htb.note, "Datos obtenidos por sincronización segura del lado del servidor.");
   note.classList.toggle("warning", Boolean(htb.warning));
 }
@@ -273,15 +282,17 @@ async function bootstrap() {
     renderSimpleList("focus-list", profile.professionalFocus || []);
     renderSimpleList("cert-list", profile.certifications || []);
     renderSimpleList("education-list", profile.education || []);
-    renderSimpleList("languages-list", profile.languages || []);
     renderExperience(profile.experience || []);
     renderSkills(profile.skills || []);
     renderHtb(htb || {});
     enableRevealAnimations();
   } catch (error) {
     byId("summary").textContent = "Error cargando el contenido del perfil.";
-    byId("htb-note").textContent = error.message;
-    byId("htb-note").classList.add("warning");
+    const htbNote = byId("htb-note");
+    if (htbNote) {
+      htbNote.textContent = error.message;
+      htbNote.classList.add("warning");
+    }
   }
 
   setActiveNav();

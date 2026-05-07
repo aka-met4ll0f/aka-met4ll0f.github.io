@@ -1,10 +1,47 @@
 const contentPath = "./src/data/content.json";
+const githubApiBase = "https://api.github.com/repos/";
+
+function parseGitHubRepo(url) {
+  if (!url || !url.includes("github.com")) {
+    return null;
+  }
+
+  const clean = url.replace(/\.git$/, "").replace(/\/+$/, "");
+  const match = clean.match(/github\.com\/([^/]+)\/([^/]+)/i);
+  if (!match) {
+    return null;
+  }
+
+  return `${match[1]}/${match[2]}`;
+}
+
+function formatDate(dateValue) {
+  if (!dateValue) {
+    return null;
+  }
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toLocaleDateString("es-CO", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit"
+  });
+}
 
 function createTag(tag) {
   const pill = document.createElement("span");
   pill.className = "tag-pill";
   pill.textContent = tag;
   return pill;
+}
+
+function createBadge(text, type = "default") {
+  const badge = document.createElement("span");
+  badge.className = `meta-badge meta-badge--${type}`;
+  badge.textContent = text;
+  return badge;
 }
 
 function buildCard(item, pageType) {
@@ -21,6 +58,18 @@ function buildCard(item, pageType) {
   const metaRight = item.platform || item.type || item.status || "";
   meta.textContent = [metaLeft, metaRight].filter(Boolean).join(" · ");
 
+  const badges = document.createElement("div");
+  badges.className = "badge-list";
+  if (item.language) {
+    badges.appendChild(createBadge(item.language, "language"));
+  }
+  if (item.type) {
+    badges.appendChild(createBadge(item.type, "type"));
+  }
+  if (item.updatedAtFormatted) {
+    badges.appendChild(createBadge(`Actualizado: ${item.updatedAtFormatted}`, "updated"));
+  }
+
   const summary = document.createElement("p");
   summary.className = "entry-summary";
   summary.textContent = item.summary;
@@ -31,7 +80,25 @@ function buildCard(item, pageType) {
 
   const actions = document.createElement("div");
   actions.className = "entry-actions";
-  if (item.url) {
+  if (item.url && pageType === "scripts") {
+    const code = document.createElement("a");
+    code.className = "entry-link";
+    code.href = item.url;
+    code.target = "_blank";
+    code.rel = "noreferrer noopener";
+    code.textContent = "Ver código";
+    actions.appendChild(code);
+
+    if (item.readmeUrl) {
+      const readme = document.createElement("a");
+      readme.className = "entry-link entry-link--alt";
+      readme.href = item.readmeUrl;
+      readme.target = "_blank";
+      readme.rel = "noreferrer noopener";
+      readme.textContent = "Ver README";
+      actions.appendChild(readme);
+    }
+  } else if (item.url) {
     const link = document.createElement("a");
     link.className = "entry-link";
     link.href = item.url;
@@ -41,7 +108,7 @@ function buildCard(item, pageType) {
     actions.appendChild(link);
   }
 
-  article.append(title, meta, summary, tags, actions);
+  article.append(title, meta, badges, summary, tags, actions);
   return article;
 }
 
@@ -67,7 +134,16 @@ function setupSearch(allItems, pageType, root) {
   input.addEventListener("input", () => {
     const term = input.value.toLowerCase().trim();
     const filtered = allItems.filter((item) => {
-      const text = [item.title, item.summary, ...(item.tags || [])].join(" ").toLowerCase();
+      const text = [
+        item.title,
+        item.summary,
+        item.language,
+        item.type,
+        item.platform,
+        ...(item.tags || [])
+      ]
+        .join(" ")
+        .toLowerCase();
       return text.includes(term);
     });
     mountCards(root, filtered, pageType);
@@ -92,6 +168,44 @@ function revealEntries() {
   items.forEach((item) => observer.observe(item));
 }
 
+async function fetchScriptMeta(items) {
+  const enriched = await Promise.all(
+    items.map(async (item) => {
+      const repo = parseGitHubRepo(item.url);
+      if (!repo) {
+        return item;
+      }
+
+      try {
+        const response = await fetch(`${githubApiBase}${repo}`);
+        if (!response.ok) {
+          return item;
+        }
+
+        const repoData = await response.json();
+        const updatedAt = repoData.pushed_at || repoData.updated_at || null;
+        const readmeUrl = `${item.url.replace(/\/+$/, "")}/blob/${repoData.default_branch || "main"}/README.md`;
+
+        return {
+          ...item,
+          language: item.language || repoData.language || "N/A",
+          updatedAt,
+          updatedAtFormatted: formatDate(updatedAt),
+          readmeUrl
+        };
+      } catch {
+        return item;
+      }
+    })
+  );
+
+  return enriched.sort((a, b) => {
+    const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
 async function loadCollections() {
   const pageType = document.body.dataset.page;
   const root = document.getElementById("content-grid");
@@ -105,7 +219,12 @@ async function loadCollections() {
   }
 
   const content = await response.json();
-  const sectionData = content[pageType] || [];
+  let sectionData = content[pageType] || [];
+
+  if (pageType === "scripts") {
+    sectionData = await fetchScriptMeta(sectionData);
+  }
+
   mountCards(root, sectionData, pageType);
   setupSearch(sectionData, pageType, root);
   revealEntries();
