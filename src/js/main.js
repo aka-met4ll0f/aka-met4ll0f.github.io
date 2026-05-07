@@ -227,7 +227,7 @@ function renderHtb(htb) {
   cards.innerHTML = "";
 
   const fields = [
-    { label: "Ranking Global", value: htb.rankingGlobal },
+    { label: "HTB Rank", value: htb.htbRank },
     { label: "Puntos", value: htb.points },
     { label: "Nivel", value: htb.level },
     { label: "Máquinas User", value: htb.userOwns },
@@ -243,7 +243,8 @@ function renderHtb(htb) {
     ? `Actualizado: ${new Date(htb.updatedAt).toLocaleString("es-CO")}`
     : "Sincronización pendiente";
 
-  note.textContent = safeText(htb.note, "Datos obtenidos por sincronización segura del lado del servidor.");
+  note.textContent = htb.note ? String(htb.note) : "";
+  note.hidden = note.textContent.trim().length === 0;
   note.classList.toggle("warning", Boolean(htb.warning));
 }
 

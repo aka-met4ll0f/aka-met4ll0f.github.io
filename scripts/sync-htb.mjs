@@ -115,6 +115,11 @@ function mapData(payloads, previous) {
 async function main() {
   const previous = await loadCurrentData();
 
+  if (previous && previous.manualLocked) {
+    console.log("HTB manual lock activo. No se sobrescriben datos.");
+    return;
+  }
+
   if (!token) {
     const fallback = {
       ...previous,

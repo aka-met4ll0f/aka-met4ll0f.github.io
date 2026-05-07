@@ -1,13 +1,15 @@
 {
-  "source": "htb-api",
-  "username": "Facts",
+  "source": "manual",
+  "manualLocked": true,
+  "username": "met4ll0f",
+  "htbRank": "Pro Hacker / Master",
   "rankingGlobal": null,
   "points": 20,
   "level": null,
-  "userOwns": null,
-  "rootOwns": null,
-  "challengesSolved": null,
-  "updatedAt": "2026-05-07T02:56:12.704Z",
-  "note": "Datos sincronizados de HTB vía job server-side. Sin exponer tokens en frontend.",
+  "userOwns": 52,
+  "rootOwns": 52,
+  "challengesSolved": 7,
+  "updatedAt": "2026-05-07T03:05:00.000Z",
+  "note": "",
   "warning": false
 }
