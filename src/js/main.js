@@ -227,7 +227,7 @@ function renderHtb(htb) {
   cards.innerHTML = "";
 
   const fields = [
-    { label: "HTB Rank", value: htb.htbRank },
+    { label: "HTB RANK", value: htb.htbRank },
     { label: "Puntos", value: htb.points },
     { label: "Nivel", value: htb.level },
     { label: "Máquinas User", value: htb.userOwns },
