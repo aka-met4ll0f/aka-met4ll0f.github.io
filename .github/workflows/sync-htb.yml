@@ -26,6 +26,11 @@ jobs:
           HTB_USER_ID: ${{ vars.HTB_USER_ID }}
         run: node ./scripts/sync-htb.mjs
 
+      - name: Configure git identity for commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Commit synced data
         run: |
           if [ -n "$(git status --porcelain src/data/htb.json)" ]; then
