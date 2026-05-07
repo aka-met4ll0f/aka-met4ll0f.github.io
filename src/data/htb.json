@@ -1,13 +1,13 @@
 {
-  "source": "manual-fallback",
-  "username": "Daniel Galindo",
+  "source": "htb-api",
+  "username": "Facts",
   "rankingGlobal": null,
-  "points": null,
+  "points": 20,
   "level": null,
   "userOwns": null,
   "rootOwns": null,
   "challengesSolved": null,
-  "updatedAt": "2026-05-06T15:06:49.253Z",
-  "note": "No se detectó HTB_API_TOKEN. Conservando datos actuales.",
-  "warning": true
+  "updatedAt": "2026-05-07T02:23:41.068Z",
+  "note": "Datos sincronizados de HTB vía job server-side. Sin exponer tokens en frontend.",
+  "warning": false
 }
