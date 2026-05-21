@@ -45,11 +45,27 @@
       <section class="panel panel-large">
         <div class="panel-title-row">
           <h2>Search content</h2>
+          <span id="active-filter-label" class="tag">All techniques</span>
         </div>
         <input id="search-input" class="search-input" type="search" placeholder="Filter by title, technique, or tag" />
+        <div id="technique-filters" class="filter-list" aria-label="Technique filters"></div>
+      </section>
+
+      <section class="panel panel-large" aria-labelledby="featured-writeups-title">
+        <div class="panel-title-row">
+          <h2 id="featured-writeups-title">Recommended attack paths</h2>
+          <span class="tag">Curated</span>
+        </div>
+        <p class="panel-copy">
+          Selected writeups that best demonstrate end-to-end attack chains, privilege escalation and professional reporting value.
+        </p>
+        <div id="featured-writeups" class="entry-grid"></div>
       </section>
 
       <section class="panel panel-large">
+        <div class="panel-title-row">
+          <h2>Full writeup library</h2>
+        </div>
         <div id="content-grid" class="entry-grid"></div>
       </section>
     </main>

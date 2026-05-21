@@ -31,7 +31,7 @@
 
     <section class="hero hero-compact">
       <p class="hero-kicker">Offensive automation</p>
-      <h1>Scripts and utilities</h1>
+      <h1>Security automation projects</h1>
       <p class="headline js-headline"></p>
       <p class="meta js-location"></p>
       <nav class="top-links" aria-label="External links">
@@ -42,12 +42,40 @@
     </section>
 
     <main class="layout">
-      <section class="panel panel-large">
-        <h2>Search content</h2>
-        <input id="search-input" class="search-input" type="search" placeholder="Filter by language, technique, or tag" />
+      <section class="panel panel-large" aria-labelledby="automation-value-title">
+        <div class="panel-title-row">
+          <h2 id="automation-value-title">Automation Value</h2>
+          <span class="tag">Practical tooling</span>
+        </div>
+        <p class="panel-copy">
+          Public tools focused on repeatable reconnaissance, evidence collection, network forensics and reporting workflows for authorized assessments and lab environments.
+        </p>
+        <div class="quick-grid">
+          <article class="quick-card">
+            <h3>Assessment Support</h3>
+            <p>Utilities designed to reduce manual repetition during recon, asset review and controlled validation.</p>
+          </article>
+          <article class="quick-card">
+            <h3>Evidence & Reporting</h3>
+            <p>Scripts that convert technical output into screenshots, Markdown, HTML or spreadsheet-ready artifacts.</p>
+          </article>
+        </div>
       </section>
 
       <section class="panel panel-large">
+        <div class="panel-title-row">
+          <h2>Search projects</h2>
+          <span id="active-filter-label" class="tag">All workflows</span>
+        </div>
+        <input id="search-input" class="search-input" type="search" placeholder="Filter by language, technique, or tag" />
+        <div id="script-filters" class="filter-list" aria-label="Script workflow filters"></div>
+      </section>
+
+      <section class="panel panel-large">
+        <div class="panel-title-row">
+          <h2>Project Library</h2>
+          <span class="tag">GitHub-backed</span>
+        </div>
         <div id="content-grid" class="entry-grid"></div>
       </section>
     </main>

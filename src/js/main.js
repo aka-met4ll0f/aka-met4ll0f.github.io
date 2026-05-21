@@ -185,6 +185,10 @@ function setHero(profile) {
   htbLink.href = profile.contact?.hackTheBox || "#";
 
   byId("summary").textContent = safeText(profile.summary);
+  const ethicsStatement = byId("ethics-statement");
+  if (ethicsStatement) {
+    ethicsStatement.textContent = safeText(profile.ethicsStatement, "");
+  }
 
   runTerminalTicker(copy.ticker);
 }
@@ -256,13 +260,63 @@ function renderCareerMetrics(profile) {
   });
 }
 
-function renderSkills(skills) {
+function createCapabilityCard(titleText, items) {
+  const card = document.createElement("article");
+  card.className = "capability-card";
+
+  const title = document.createElement("h3");
+  title.textContent = titleText;
+
+  const list = document.createElement("ul");
+  list.className = "pill-list";
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    list.appendChild(li);
+  });
+
+  card.append(title, list);
+  return card;
+}
+
+function renderSkills(skills, skillGroups = []) {
   const root = byId("skills-list");
   root.innerHTML = "";
+
+  if (skillGroups.length > 0) {
+    skillGroups.forEach((group) => {
+      root.appendChild(createCapabilityCard(group.category, group.items || []));
+    });
+    return;
+  }
+
   skills.forEach((skill) => {
     const li = document.createElement("li");
     li.textContent = skill;
     root.appendChild(li);
+  });
+}
+
+function renderMethodologies(methodologies) {
+  const root = byId("methodologies-list");
+  if (!root) {
+    return;
+  }
+
+  root.innerHTML = "";
+  methodologies.forEach((methodology) => {
+    const card = document.createElement("article");
+    card.className = "capability-card";
+
+    const title = document.createElement("h3");
+    title.textContent = methodology.name;
+
+    const description = document.createElement("p");
+    description.textContent = methodology.description;
+
+    card.append(title, description);
+    root.appendChild(card);
   });
 }
 
@@ -335,7 +389,8 @@ async function bootstrap() {
     renderSimpleList("cert-list", profile.certifications || []);
     renderSimpleList("education-list", profile.education || []);
     renderExperience(profile.experience || []);
-    renderSkills(profile.skills || []);
+    renderSkills(profile.skills || [], profile.skillGroups || []);
+    renderMethodologies(profile.methodologies || []);
     renderHtb(htb || {});
     enableRevealAnimations();
   } catch (error) {

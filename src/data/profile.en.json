@@ -1,21 +1,21 @@
 {
   "name": "Daniel Felipe Galindo Arias",
-  "headline": "Senior Cybersecurity Consultant - Pentester - Red Teamer - Ethical Hacker - IT/OT",
+  "headline": "Senior Offensive Security Consultant focused on Web/API, Active Directory, Android and IT/OT security assessments.",
   "location": "Neiva, Huila, Colombia",
   "availability": "Available for remote work worldwide",
-  "summary": "Master in Information Security with more than 15 years of experience in cybersecurity, offensive security, and technology risk management. Specialized in penetration testing, ethical hacking, Red Team operations, vulnerability analysis, and control assessments in IT/OT environments. Strong background in GNU/Linux, Windows, Active Directory, virtualization, web servers, hardening, and incident response with a focus on operational continuity and resilience.",
+  "summary": "Master in Information Security with more than 15 years of experience across cybersecurity, offensive security and technology risk management. I help organizations identify exploitable weaknesses, validate real attack paths and translate technical findings into actionable remediation plans for business and technical stakeholders. My work focuses on web/API, Active Directory, Android and IT/OT assessments, combining hands-on exploitation, evidence-based reporting and practical hardening guidance.",
+  "ethicsStatement": "All offensive security activities documented in this portfolio were performed in authorized environments, public training platforms, personal labs or sanitized professional scenarios. No client-sensitive information, credentials, secrets or confidential data are disclosed.",
   "contact": {
     "github": "https://github.com/aka-met4ll0f",
     "linkedin": "https://linkedin.com/in/daniel-galindoa",
     "hackTheBox": "https://app.hackthebox.com/public/users/886162"
   },
   "professionalFocus": [
-    "Red Team operations and penetration testing",
-    "Technical cybersecurity auditing",
-    "Vulnerability assessment",
-    "IT and OT security",
-    "Application and API security",
-    "Web, Android, API, and Active Directory pentesting"
+    "Web/API Security: authentication, authorization, business logic, file upload, SSRF, SQL injection and SOAP/WSDL testing.",
+    "Active Directory & Internal Pentest: attack path analysis, Kerberos abuse, credential exposure, AD CS and privilege escalation.",
+    "Android Security: APK review, static analysis, traffic interception, insecure storage and runtime testing.",
+    "IT/OT Security: segmentation reviews, exposure analysis, firewall rules and risk translation for operational environments.",
+    "Reporting & Remediation: executive summaries, technical evidence, risk narratives and prioritized remediation plans."
   ],
   "experience": [
     {
@@ -24,9 +24,9 @@
       "period": "Feb 2025 - Present",
       "modality": "Remote",
       "highlights": [
-        "Execution of technical audits, penetration testing, and security assessments for applications, web services, and corporate assets.",
-        "Vulnerability analysis and delivery of technical/executive reports with evidence, impact, and remediation guidance.",
-        "Participation in offensive security initiatives and exposure assessment activities."
+        "Led and supported offensive security assessments across web applications, APIs, corporate assets and enterprise environments, identifying exploitable weaknesses and validating realistic attack paths.",
+        "Performed manual vulnerability validation using offensive tooling, custom scripts and evidence-driven testing to separate exploitable risk from scanner noise.",
+        "Delivered executive and technical reports with attack narrative, business impact, proof of concept, affected assets and prioritized remediation guidance."
       ]
     },
     {
@@ -35,9 +35,9 @@
       "period": "Oct 2022 - Jan 2025",
       "modality": "Remote",
       "highlights": [
-        "Execution of technical audits and penetration tests across corporate assets.",
-        "Support in vulnerability analysis, risk management, and control strengthening.",
-        "Support for security monitoring, technical documentation, incident management, and business-facing coordination."
+        "Conducted technical audits, vulnerability assessments and penetration testing activities across corporate infrastructure and application environments.",
+        "Validated findings, prioritized remediation and documented technical evidence to support vulnerability management and risk reduction processes.",
+        "Supported security monitoring, incident documentation and stakeholder coordination, strengthening the connection between technical risk and operational impact."
       ]
     },
     {
@@ -46,9 +46,9 @@
       "period": "Jun 2012 - Oct 2022",
       "modality": "On-site/Remote",
       "highlights": [
-        "Professional growth from support and infrastructure into cybersecurity across enterprise environments.",
-        "Support for perimeter security, SSL certificates, Git-based version control, and operational continuity.",
-        "Execution of technical audits, penetration testing, and security assessments of applications and web services."
+        "Progressed from infrastructure and systems operations into cybersecurity responsibilities across business-critical enterprise environments.",
+        "Supported perimeter security, SSL certificate management, Git-based version control, infrastructure hardening and operational continuity initiatives.",
+        "Participated in technical security reviews, web service assessments and infrastructure risk analysis, building a hybrid foundation across operations, risk and offensive validation."
       ]
     }
   ],
@@ -89,5 +89,57 @@
     "Git",
     "Postman",
     "MobSF"
+  ],
+  "skillGroups": [
+    {
+      "category": "Web / API Security",
+      "items": ["Burp Suite Pro", "OWASP ZAP", "Postman", "ffuf", "Nuclei", "SQLMap", "SOAP/WSDL testing", "REST API testing"]
+    },
+    {
+      "category": "Active Directory / Internal Pentest",
+      "items": ["Impacket", "BloodHound", "Certipy", "Kerbrute", "NetExec", "Mimikatz", "Hashcat", "Evil-WinRM"]
+    },
+    {
+      "category": "Mobile Security",
+      "items": ["MobSF", "JADX", "APKTool", "ADB", "Frida", "objection", "Android Studio Emulator"]
+    },
+    {
+      "category": "Network / Infrastructure",
+      "items": ["Nmap", "Nessus", "Wireshark", "tshark", "Metasploit", "OpenVPN", "Linux", "Windows Server"]
+    },
+    {
+      "category": "IT / OT Security",
+      "items": ["Purdue Model", "Segmentation review", "Firewall rule review", "Traffic analysis", "Industrial network architecture"]
+    },
+    {
+      "category": "Automation / Development",
+      "items": ["Python", "Bash", "Git", "Docker", "Markdown reporting", "CSV/XLSX report generation"]
+    }
+  ],
+  "methodologies": [
+    {
+      "name": "OWASP WSTG",
+      "description": "Web application testing methodology for authentication, authorization, session management, input validation and business logic review."
+    },
+    {
+      "name": "OWASP API Security Top 10",
+      "description": "Reference for API authorization, authentication, object-level access control and business logic testing."
+    },
+    {
+      "name": "OWASP MASVS / MASTG",
+      "description": "Mobile application security verification and testing guidance for Android assessment workflows."
+    },
+    {
+      "name": "MITRE ATT&CK",
+      "description": "Framework for mapping adversary behavior, attack paths and technical findings to tactics and techniques."
+    },
+    {
+      "name": "PTES",
+      "description": "Penetration testing execution reference for scoping, intelligence gathering, exploitation and reporting."
+    },
+    {
+      "name": "Purdue Model",
+      "description": "Architecture reference for IT/OT segmentation reviews and industrial network risk communication."
+    }
   ]
 }

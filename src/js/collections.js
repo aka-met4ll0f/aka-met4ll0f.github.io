@@ -3,6 +3,33 @@ const isEnglish = pageLang === "en";
 const locale = isEnglish ? "en-US" : "es-CO";
 const contentPath = isEnglish ? "/src/data/content.en.json" : "/src/data/content.json";
 const githubApiBase = "https://api.github.com/repos/";
+const featuredWriteupUrls = [
+  "/writeups/tombwatcher.html",
+  "/writeups/escape.html",
+  "/writeups/pov.html",
+  "/writeups/trickster.html",
+  "/writeups/analytics.html",
+  "/writeups/dog.html"
+];
+const writeupFilters = [
+  { label: "All", terms: [] },
+  { label: "Active Directory", terms: ["active directory", "kerberos", "dcsync", "bloodhound", "gmsa"] },
+  { label: "AD CS", terms: ["ad cs", "esc1", "esc7", "esc15", "esc16", "certipy"] },
+  { label: "Web / API", terms: ["web", "api", "ssrf", "file upload", "sql injection", "lfi", "xslt", "viewstate"] },
+  { label: "Windows PrivEsc", terms: ["windows", "seimpersonate", "sedebug", "godpotato", "ntfs", "dpapi"] },
+  { label: "Linux PrivEsc", terms: ["linux", "sudo", "capabilities", "suid", "overlayfs", "facter"] },
+  { label: "Docker", terms: ["docker", "container", "changedetection.io", "metabase"] },
+  { label: "Mobile", terms: ["android", "apk", "jadx", "jwt", "mobile"] },
+  { label: "CVE", terms: ["cve", "pymatgen", "aiohttp", "prestashop", "metabase", "sqlpad"] }
+];
+const scriptFilters = [
+  { label: "All", terms: [] },
+  { label: "Recon", terms: ["recon", "dns", "nmap", "ffuf", "osint", "fingerprinting"] },
+  { label: "Evidence", terms: ["evidence", "screenshots", "report", "markdown", "html", "xlsx"] },
+  { label: "Forensics", terms: ["pcap", "forensics", "tshark", "network indicators"] },
+  { label: "Identity", terms: ["identity", "username", "users"] },
+  { label: "Lab", terms: ["offensive lab", "wordpress", "wpscan", "xml-rpc", "webadmin", "non-production"] }
+];
 
 function parseGitHubRepo(url) {
   if (!url || !url.includes("github.com")) {
@@ -45,6 +72,52 @@ function createBadge(text, type = "default") {
   badge.className = `meta-badge meta-badge--${type}`;
   badge.textContent = text;
   return badge;
+}
+
+function getSearchText(item) {
+  return [
+    item.title,
+    item.summary,
+    item.language,
+    item.type,
+    item.platform,
+    item.os,
+    item.purpose,
+    item.workflow,
+    item.outputs,
+    item.safeUse,
+    ...(item.tags || [])
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
+function appendProjectDetails(article, item) {
+  const details = [
+    { label: "Purpose", value: item.purpose },
+    { label: "Workflow", value: item.workflow },
+    { label: "Outputs", value: item.outputs },
+    { label: "Safe use", value: item.safeUse }
+  ].filter((detail) => detail.value);
+
+  if (details.length === 0) {
+    return;
+  }
+
+  const list = document.createElement("dl");
+  list.className = "project-detail-list";
+
+  details.forEach((detail) => {
+    const term = document.createElement("dt");
+    term.textContent = detail.label;
+
+    const description = document.createElement("dd");
+    description.textContent = detail.value;
+
+    list.append(term, description);
+  });
+
+  article.appendChild(list);
 }
 
 function buildCard(item, pageType) {
@@ -120,7 +193,11 @@ function buildCard(item, pageType) {
     actions.appendChild(link);
   }
 
-  article.append(title, meta, badges, summary, tags, actions);
+  article.append(title, meta, badges, summary, tags);
+  if (pageType === "scripts") {
+    appendProjectDetails(article, item);
+  }
+  article.appendChild(actions);
   return article;
 }
 
@@ -178,33 +255,110 @@ function mountGroupedWriteups(root, data) {
   });
 }
 
+function mountFeaturedWriteups(data) {
+  const root = document.getElementById("featured-writeups");
+  if (!root) {
+    return;
+  }
+
+  const section = root.closest("section");
+  const featured = featuredWriteupUrls
+    .map((url) => data.find((item) => item.url === url))
+    .filter(Boolean);
+
+  root.innerHTML = "";
+  if (section) {
+    section.hidden = featured.length === 0;
+  }
+
+  featured.forEach((item) => root.appendChild(buildCard(item, "writeups")));
+}
+
+function filterItems(allItems, term, activeFilter) {
+  const searchTerm = term.toLowerCase().trim();
+  return allItems.filter((item) => {
+    const text = getSearchText(item);
+    const matchesSearch = !searchTerm || text.includes(searchTerm);
+    const matchesFilter =
+      !activeFilter?.terms?.length || activeFilter.terms.some((filterTerm) => text.includes(filterTerm));
+    return matchesSearch && matchesFilter;
+  });
+}
+
+function mountFilteredItems(allItems, pageType, root, term, activeFilter) {
+  const filtered = filterItems(allItems, term, activeFilter);
+  if (pageType === "writeups") {
+    mountGroupedWriteups(root, filtered);
+  } else {
+    mountCards(root, filtered, pageType);
+  }
+  revealEntries();
+}
+
+function getFilterConfig(pageType) {
+  if (pageType === "writeups") {
+    return {
+      rootId: "technique-filters",
+      allLabel: "All techniques",
+      filters: writeupFilters
+    };
+  }
+
+  if (pageType === "scripts") {
+    return {
+      rootId: "script-filters",
+      allLabel: "All workflows",
+      filters: scriptFilters
+    };
+  }
+
+  return null;
+}
+
+function setupCollectionFilters(allItems, pageType, root, getTerm) {
+  const config = getFilterConfig(pageType);
+  const filtersRoot = config ? document.getElementById(config.rootId) : null;
+  const activeLabel = document.getElementById("active-filter-label");
+  if (!config || !filtersRoot) {
+    return null;
+  }
+
+  let activeFilter = config.filters[0];
+  filtersRoot.innerHTML = "";
+
+  config.filters.forEach((filter) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "filter-chip";
+    button.textContent = filter.label;
+    button.setAttribute("aria-pressed", filter === activeFilter ? "true" : "false");
+
+    button.addEventListener("click", () => {
+      activeFilter = filter;
+      filtersRoot.querySelectorAll(".filter-chip").forEach((chip) => {
+        chip.setAttribute("aria-pressed", chip === button ? "true" : "false");
+      });
+      if (activeLabel) {
+        activeLabel.textContent = filter.label === "All" ? config.allLabel : filter.label;
+      }
+      mountFilteredItems(allItems, pageType, root, getTerm(), activeFilter);
+    });
+
+    filtersRoot.appendChild(button);
+  });
+
+  return () => activeFilter;
+}
+
 function setupSearch(allItems, pageType, root) {
   const input = document.getElementById("search-input");
+  const getActiveFilter = setupCollectionFilters(allItems, pageType, root, () => input?.value || "");
   if (!input) {
     return;
   }
 
   input.addEventListener("input", () => {
-    const term = input.value.toLowerCase().trim();
-    const filtered = allItems.filter((item) => {
-      const text = [
-        item.title,
-        item.summary,
-        item.language,
-        item.type,
-        item.platform,
-        ...(item.tags || [])
-      ]
-        .join(" ")
-        .toLowerCase();
-      return text.includes(term);
-    });
-    if (pageType === "writeups") {
-      mountGroupedWriteups(root, filtered);
-    } else {
-      mountCards(root, filtered, pageType);
-    }
-    revealEntries();
+    mountFilteredItems(allItems, pageType, root, input.value, getActiveFilter ? getActiveFilter() : null);
   });
 }
 
@@ -287,6 +441,7 @@ async function loadCollections() {
   }
 
   if (pageType === "writeups") {
+    mountFeaturedWriteups(sectionData);
     mountGroupedWriteups(root, sectionData);
   } else {
     mountCards(root, sectionData, pageType);
@@ -298,6 +453,10 @@ async function loadCollections() {
 loadCollections().catch((error) => {
   const root = document.getElementById("content-grid");
   if (root) {
-    root.innerHTML = `<p class="empty-note">${error.message}</p>`;
+    root.innerHTML = "";
+    const empty = document.createElement("p");
+    empty.className = "empty-note";
+    empty.textContent = error.message;
+    root.appendChild(empty);
   }
 });
