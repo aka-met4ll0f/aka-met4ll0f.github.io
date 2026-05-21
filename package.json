@@ -5,6 +5,7 @@
   "description": "CV online de ciberseguridad con sincronizacion HTB",
   "type": "module",
   "scripts": {
+    "build:writeups": "node ./scripts/build-writeups.mjs",
     "sync:htb": "node ./scripts/sync-htb.mjs",
     "serve": "python3 -m http.server 8080"
   }

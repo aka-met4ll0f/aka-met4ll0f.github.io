@@ -12,6 +12,48 @@ El sitio ya no se rompe visualmente si falta una imagen: las páginas HTML de wr
    - Web: `![Escaneo inicial](/src/images/writeups/fluffy/fluffy-nmap.png)`
 5. Generar HTML estático desde Markdown antes de publicar, en lugar de renderizar Markdown arbitrario en el navegador.
 
+## Generador incluido
+
+El repositorio incluye `scripts/build-writeups.mjs` para convertir Markdown exportado desde Obsidian a HTML estático compatible con el portafolio.
+
+Uso básico:
+
+```bash
+npm run build:writeups
+```
+
+Por defecto lee archivos `.md` desde `writeups/md/` y escribe HTML en `writeups/`.
+
+También puede copiar adjuntos desde tu vault de Obsidian:
+
+```bash
+node ./scripts/build-writeups.mjs --attachments "/ruta/a/Obsidian/Attachments"
+```
+
+Frontmatter soportado:
+
+```markdown
+---
+title: Fluffy
+slug: fluffy
+lang: en
+platform: Hack The Box
+category: Active Directory
+headline: Kerberoasting, Shadow Credentials and AD CS ESC16
+difficulty: Medium
+objective: Domain Admin
+---
+```
+
+Embeds de Obsidian soportados:
+
+```markdown
+![[fluffy-nmap.png]]
+![[fluffy-nmap.png|Initial scan]]
+```
+
+El script convierte esos embeds a rutas públicas bajo `src/images/writeups/<slug>/`.
+
 ## Por qué este enfoque
 
 - Evita exponer rutas locales de Obsidian.
@@ -21,4 +63,4 @@ El sitio ya no se rompe visualmente si falta una imagen: las páginas HTML de wr
 
 ## Siguiente mejora natural
 
-Crear un script `scripts/build-writeups.mjs` que lea Markdown exportado desde Obsidian, copie imágenes, normalice rutas y genere las páginas HTML finales automáticamente.
+Conectar el generador con `src/data/content.en.json` para que el catálogo se actualice automáticamente cuando se agreguen nuevos Markdown.
