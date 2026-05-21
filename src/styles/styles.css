@@ -505,17 +505,6 @@ h1 {
   display: block;
 }
 
-.writeup-image-fallback {
-  margin: 0;
-  border: 1px dashed rgba(255, 190, 97, 0.42);
-  border-radius: 8px;
-  padding: 0.9rem;
-  color: #ffd7a1;
-  background: rgba(255, 190, 97, 0.08);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.85rem;
-}
-
 .writeup-caption {
   margin: 0.45rem 0 0;
   font-size: 0.85rem;
@@ -526,6 +515,20 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+.collection-group {
+  margin-bottom: 1.4rem;
+}
+
+.collection-groups {
+  display: block;
+}
+
+.collection-group-title {
+  margin: 0 0 0.75rem;
+  color: var(--primary);
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
 }
 
 .tag-pill {

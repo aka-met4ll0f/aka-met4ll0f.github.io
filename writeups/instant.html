@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Instant | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Mobile and API Exploitation</p>
+      <h1>HTB Instant</h1>
+      <p class="headline">APK static analysis, authenticated API LFI and Solar-PuTTY credential recovery</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Instant starts from a downloadable Android APK. Decompiling it reveals API subdomains and authentication details needed to interact with the Swagger-exposed backend.</p>
+<h2>Initial Access</h2>
+<p>With the JWT loaded into Swagger, an LFI endpoint reads <code>/etc/passwd</code> and then the SSH private key for <code>shirohige</code>, enabling SSH access.</p>
+<h2>Privilege Escalation</h2>
+<p>Backups under <code>/opt/backups/Solar-PuTTY</code> contain encrypted session data. SolarPuttyCracker decrypts the backup and reveals credentials that allow switching to root.</p>
+<h2>Publishing Note</h2>
+<p>The public source describes the private-key and password recovery path but does not publish full private-key material.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">jadx-gui instant.apk</code></pre>
+<pre><code class="language-bash">curl -H &quot;Authorization: Bearer &lt;redacted-jwt&gt;&quot; http://api.instant.htb/download?file=/etc/passwd</code></pre>
+<pre><code class="language-bash">ssh -i id_rsa shirohige@instant.htb</code></pre>
+<pre><code class="language-bash">python3 SolarPuttyCracker.py sessions-backup.dat</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021205224.png" alt="instant evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021205245.png" alt="instant evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021205639.png" alt="instant evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021211524.png" alt="instant evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021211539.png" alt="instant evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021211606.png" alt="instant evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021211944.png" alt="instant evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021212036.png" alt="instant evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021212107.png" alt="instant evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021215942.png" alt="instant evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021220022.png" alt="instant evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021213022.png" alt="instant evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021213038.png" alt="instant evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021213057.png" alt="instant evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021213354.png" alt="instant evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021213428.png" alt="instant evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021215232.png" alt="instant evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021215242.png" alt="instant evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021220219.png" alt="instant evidence 19" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021225032.png" alt="instant evidence 20" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021225128.png" alt="instant evidence 21" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021225204.png" alt="instant evidence 22" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021225224.png" alt="instant evidence 23" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/instant/Pasted%20image%2020241021225354.png" alt="instant evidence 24" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

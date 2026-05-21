@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Puppy | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Active Directory</p>
+      <h1>HTB Puppy</h1>
+      <p class="headline">Group write abuse, KeePass recovery, DPAPI secrets and DCSync</p>
+      <p class="meta">Medium - Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Puppy starts with valid credentials for <code>levi.james</code>. BloodHound shows that Levi has <code>GenericWrite</code> over the <code>Developers</code> group, allowing access to the <code>DEV</code> share and recovery of a KeePass database. Cracking the KeePass file reveals several domain passwords, one of which leads to <code>ant.edwards</code>. Through writable permissions over <code>adam.silver</code>, password reset and account enablement provide user access. Later, credentials for <code>steph.cooper</code> and DPAPI material expose <code>steph.cooper_adm</code>, who can perform DCSync and retrieve the Administrator hash.</p>
+<h2>Initial Credentials and Enumeration</h2>
+<pre><code class="language-text">User: levi.james
+Password: KingofAkron2025!</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523200054.png" alt="Initial credentials" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523200623.png" alt="Initial host validation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523200427.png" alt="Domain details" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523200753.png" alt="Service context" /></figure>
+<p>LDAP and SMB enumeration produced a list of domain users.</p>
+<pre><code class="language-bash">nxc smb 10.10.11.70 -u levi.james -p &#39;KingofAkron2025!&#39; --users
+smbmap -H 10.10.11.70 -u levi.james -p &#39;KingofAkron2025!&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523202200.png" alt="ldapdomaindump output" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523205131.png" alt="SMB user enumeration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523205600.png" alt="SMB share listing" /></figure>
+<h2>Developers Group and KeePass Recovery</h2>
+<p>BloodHound showed <code>levi.james</code> had <code>GenericWrite</code> over <code>Developers</code>, allowing group membership modification.</p>
+<pre><code class="language-bash">bloodyAD --host 10.10.11.70 -d puppy.htb -u levi.james -p &#39;KingofAkron2025!&#39; add groupMember DEVELOPERS levi.james</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523210530.png" alt="BloodHound collection" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523212725.png" alt="GenericWrite over Developers" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523214240.png" alt="Added levi.james to Developers" /></figure>
+<p>This unlocked the <code>DEV</code> share, where <code>recovery.kdbx</code> was found.</p>
+<pre><code class="language-bash">smbclient \\10.10.11.70\DEV -U &#39;levi.james&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523214442.png" alt="DEV share access" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523214659.png" alt="DEV share connection" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523214935.png" alt="recovery.kdbx download" /></figure>
+<p>The KeePass password was brute-forced.</p>
+<pre><code class="language-text">KeePass password: liverpool</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523215240.png" alt="keepass4brute download" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523215306.png" alt="KeePass password cracked" /></figure>
+<p>Recovered credentials included several users. <code>ant.edwards</code> was valid.</p>
+<pre><code class="language-text">ADAM SILVER -- HJKL2025!
+ANTONY C. EDWARDS -- Antman2025!
+JAMIE WILLIAMSON -- JamieLove2025!
+SAMUEL BLAKE -- ILY2025!
+STEVE TUCKER -- Steve2025!</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523215425.png" alt="KeePass entries" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523220400.png" alt="ant.edwards valid credentials" /></figure>
+<h2>Adam Silver Pivot</h2>
+<p><code>ant.edwards</code> had rights that allowed modification of <code>Adam D. Silver</code>, including password reset and account enablement.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523220810.png" alt="BloodHound collection as ant" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523221554.png" alt="Senior Devs group modification" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523221739.png" alt="Writable permissions" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523222303.png" alt="Writable Adam Silver object" /></figure>
+<p>Adam&#39;s password was reset and the disabled account was enabled.</p>
+<pre><code class="language-text">setuserinfo ADAM.SILVER 23 NewPassword@987
+bloodyAD --host dc.puppy.htb -d puppy.htb -u ant.edwards -p Antman2025! remove uac &#39;ADAM.SILVER&#39; -f ACCOUNTDISABLE</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523222643.png" alt="Adam password reset" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523223422.png" alt="Adam disabled account" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523223544.png" alt="Adam account enabled" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523224018.png" alt="WinRM validation as Adam" /></figure>
+<p>User access was obtained through WinRM.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523232726.png" alt="WinRM as Adam" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523232756.png" alt="User flag" /></figure>
+<h2>DPAPI and Admin Credential Recovery</h2>
+<p>Further enumeration revealed an archive containing credentials for <code>steph.cooper</code>.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523233004.png" alt="Post-user enumeration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523233556.png" alt="Archive download" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523233751.png" alt="Archive listing" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523233923.png" alt="steph.cooper credentials" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523234113.png" alt="WinRM as steph" /></figure>
+<p>DPAPI masterkeys and credential blobs were collected from Steph&#39;s profile.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523234505.png" alt="DPAPI protect directory" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523234821.png" alt="Masterkey download" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523235005.png" alt="Credential blob download" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250523235316.png" alt="DPAPI files collected" /></figure>
+<p>The DPAPI data decrypted credentials for <code>steph.cooper_adm</code>.</p>
+<pre><code class="language-text">Username: steph.cooper_adm
+Password: FivethChipOnItsWay2025!</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250524000812.png" alt="DPAPI masterkey decryption" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250524001217.png" alt="DPAPI credential decryption" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250524001245.png" alt="Recovered admin credentials" /></figure>
+<h2>DCSync and Administrator Access</h2>
+<p>BloodHound confirmed the privileged path for <code>steph.cooper_adm</code>. DCSync produced the Administrator hash.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250524001409.png" alt="BloodHound as steph.cooper_adm" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250524003243.png" alt="DCSync dump" /></figure>
+<pre><code class="language-text">Administrator:500:aad3b435b51404eeaad3b435b51404ee:bb0edc15e49ceb4120c7bd7e6e65d75b:::</code></pre>
+<p>The hash was used for Pass-the-Hash.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250524003345.png" alt="Administrator hash validation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250524002016.png" alt="Pass-the-Hash" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/puppy/Pasted%20image%2020250524003445.png" alt="Administrator shell" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>Group write permissions can expose new shares and sensitive vault files.</li>
+<li>KeePass and DPAPI artifacts often create credential chains across users.</li>
+<li>Account enablement plus password reset is a complete pivot when WinRM is available.</li>
+<li>DCSync-capable users turn domain compromise into Administrator hash recovery.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

@@ -8,7 +8,7 @@ function parseArgs(argv) {
     input: "writeups/md",
     output: "writeups",
     images: "src/images/writeups",
-    attachments: null
+    attachments: []
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -27,7 +27,11 @@ function parseArgs(argv) {
       throw new Error(`Unknown option --${key}`);
     }
 
-    args[key] = value;
+    if (key === "attachments") {
+      args.attachments.push(value);
+    } else {
+      args[key] = value;
+    }
     index += 1;
   }
 
@@ -115,7 +119,7 @@ async function exists(filePath) {
   }
 }
 
-async function findAttachment(dir, fileName) {
+async function findAttachmentInDir(dir, fileName) {
   if (!dir || !(await exists(dir))) {
     return null;
   }
@@ -128,10 +132,21 @@ async function findAttachment(dir, fileName) {
     }
 
     if (entry.isDirectory()) {
-      const nested = await findAttachment(fullPath, fileName);
+      const nested = await findAttachmentInDir(fullPath, fileName);
       if (nested) {
         return nested;
       }
+    }
+  }
+
+  return null;
+}
+
+async function findAttachment(dirs, fileName) {
+  for (const dir of dirs) {
+    const source = await findAttachmentInDir(dir, fileName);
+    if (source) {
+      return source;
     }
   }
 
@@ -149,12 +164,14 @@ async function normalizeObsidianImages(markdown, context) {
     const alt = rawAlt.replace(/\.[A-Za-z0-9]+$/, "");
     const imageUrl = `/src/images/writeups/${context.slug}/${encodeURIComponent(fileName)}`;
 
-    if (context.attachmentsDir) {
-      const source = await findAttachment(context.attachmentsDir, fileName);
+    if (context.attachmentsDirs.length > 0) {
+      const source = await findAttachment(context.attachmentsDirs, fileName);
       if (source) {
         const destinationDir = path.join(context.imagesDir, context.slug);
         await mkdir(destinationDir, { recursive: true });
         await copyFile(source, path.join(destinationDir, fileName));
+      } else {
+        console.warn(`Attachment not found: ${fileName}`);
       }
     }
 
@@ -358,7 +375,7 @@ async function buildWriteup(filePath, options) {
   const slug = slugify(metadata.slug || title);
   const normalizedMarkdown = await normalizeObsidianImages(body.replace(/^#\s+.+$/m, "").trimStart(), {
     slug,
-    attachmentsDir: options.attachmentsDir,
+    attachmentsDirs: options.attachmentsDirs,
     imagesDir: options.imagesDir
   });
   const html = buildPage({ metadata, title, bodyHtml: renderMarkdown(normalizedMarkdown) });
@@ -375,7 +392,7 @@ async function main() {
   const inputDir = resolvePath(args.input);
   const outputDir = resolvePath(args.output);
   const imagesDir = resolvePath(args.images);
-  const attachmentsDir = args.attachments ? resolvePath(args.attachments) : null;
+  const attachmentsDirs = args.attachments.map(resolvePath);
 
   if (!(await exists(inputDir))) {
     console.log(`No Markdown input directory found: ${inputDir}`);
@@ -393,7 +410,7 @@ async function main() {
   }
 
   for (const file of markdownFiles) {
-    const outputFile = await buildWriteup(file, { outputDir, imagesDir, attachmentsDir });
+    const outputFile = await buildWriteup(file, { outputDir, imagesDir, attachmentsDirs });
     console.log(`Generated ${path.relative(rootDir, outputFile)}`);
   }
 }

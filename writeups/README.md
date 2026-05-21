@@ -24,10 +24,13 @@ npm run build:writeups
 
 Por defecto lee archivos `.md` desde `writeups/md/` y escribe HTML en `writeups/`.
 
-También puede copiar adjuntos desde tu vault de Obsidian:
+También puede copiar adjuntos desde tu vault de Obsidian. Puedes pasar una o varias rutas `--attachments`:
 
 ```bash
 node ./scripts/build-writeups.mjs --attachments "/ruta/a/Obsidian/Attachments"
+node ./scripts/build-writeups.mjs \
+  --attachments "/ruta/a/HTB/Imágenes" \
+  --attachments "/ruta/a/PortSwigger/Imágenes"
 ```
 
 Frontmatter soportado:

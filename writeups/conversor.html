@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Conversor | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - XXE and Linux Privilege Escalation</p>
+      <h1>HTB Conversor</h1>
+      <p class="headline">XSLT file write to code execution, SQLite credential recovery and needrestart abuse</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Conversor allows users to upload transformation files without sufficient parser restrictions. An XSLT payload writes a Python script into the application scripts directory and triggers a reverse shell as <code>www-data</code>.</p>
+<h2>Initial Access</h2>
+<p>The payload uses <code>exsl:document</code> to write server-side code that downloads and executes a staged shell from the attacker host. Submitting the XML and XSLT pair through the converter triggers execution.</p>
+<h2>Credential Recovery</h2>
+<p>The application directory contains a SQLite database with user hashes. Cracking the relevant MD5 hash recovers credentials for a valid local user.</p>
+<h2>Privilege Escalation</h2>
+<p><code>sudo -l</code> exposes <code>needrestart</code>. A crafted Perl configuration creates a SUID copy of <code>/bin/bash</code>, which is then executed with <code>-p</code> to preserve root privileges.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">sqlite3 users.db .dump</code></pre>
+<pre><code class="language-bash">echo &#39;system(&quot;cp /bin/bash /tmp/poc; chmod u+s /tmp/poc&quot;)&#39; &gt; /tmp/bash.conf</code></pre>
+<pre><code class="language-bash">sudo /usr/sbin/needrestart -r l -c /tmp/bash.conf</code></pre>
+<pre><code class="language-bash">/tmp/poc -p</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512175949.png" alt="conversor evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512180120.png" alt="conversor evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512180530.png" alt="conversor evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512180646.png" alt="conversor evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512181155.png" alt="conversor evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512181705.png" alt="conversor evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512181835.png" alt="conversor evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512182508.png" alt="conversor evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512183314.png" alt="conversor evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512183524.png" alt="conversor evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512183737.png" alt="conversor evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512184336.png" alt="conversor evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512184440.png" alt="conversor evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512185706.png" alt="conversor evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512190020.png" alt="conversor evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512190351.png" alt="conversor evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512190605.png" alt="conversor evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512211238.png" alt="conversor evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512212138.png" alt="conversor evidence 19" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512212542.png" alt="conversor evidence 20" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/conversor/Pasted%20image%2020260512212640.png" alt="conversor evidence 21" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

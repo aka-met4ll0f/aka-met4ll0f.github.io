@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Cicada | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Active Directory</p>
+      <h1>HTB Cicada</h1>
+      <p class="headline">SMB disclosure, LDAP descriptions, credential reuse and SeBackupPrivilege</p>
+      <p class="meta">Easy - Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Cicada is an Active Directory machine where anonymous and guest-accessible SMB content exposes a default password. User enumeration identifies valid principals, and LDAP data later reveals another password stored in a user description field. That credential provides access to a developer share containing a PowerShell backup script with credentials for <code>emily.oscars</code>. The final privilege escalation abuses <code>SeBackupPrivilege</code> to copy registry hives, extract the Administrator NTLM hash and authenticate via Pass-the-Hash.</p>
+<h2>Enumeration and SMB Disclosure</h2>
+<p>Port and service enumeration identified a Windows domain controller.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003184214.png" alt="Open port scan" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003184633.png" alt="Service enumeration" /></figure>
+<p>SMB shares were listed and the <code>HR</code> share was readable.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003193114.png" alt="SMB share listing" /></figure>
+<p>Inside <code>HR</code>, the file <code>Notice from HR.txt</code> contained a default password.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003193216.png" alt="HR notice file" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003193308.png" alt="Default password disclosure" /></figure>
+<h2>User Enumeration and Credential Discovery</h2>
+<p>Users were enumerated with NetExec RID brute force.</p>
+<pre><code class="language-bash">nxc smb 10.10.11.35 -u guest -p &#39;&#39; --rid-brute</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003202234.png" alt="RID brute force output" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003202304.png" alt="Discovered users" /></figure>
+<p>Kerbrute confirmed valid users for <code>cicada.htb</code>.</p>
+<pre><code class="language-bash">kerbrute userenum -d &quot;cicada.htb&quot; users.txt --dc &quot;CICADA-DC.cicada.htb&quot;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003203314.png" alt="Kerbrute valid users" /></figure>
+<p>Testing the default password identified <code>michael.wrightson</code> as a valid account.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003204245.png" alt="Default password validation" /></figure>
+<p>LDAP domain dump revealed that <code>david.orelious</code> had a password stored in the <code>description</code> field.</p>
+<pre><code class="language-bash">ldapdomaindump -u &#39;cicada.htb\michael.wrightson&#39; -p &#39;Cicada$M6Corpb*@Lp#nZp!8&#39; 10.10.11.35</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003205439.png" alt="LDAP domain dump" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003210029.png" alt="Password in description field" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003210009.png" alt="david.orelious credential disclosure" /></figure>
+<h2>Developer Share and WinRM Access</h2>
+<p><code>david.orelious</code> had access to the <code>DEV</code> share, which contained <code>Backup_script.ps1</code>.</p>
+<pre><code class="language-bash">smbclient //10.10.11.35/DEV -U david.orelious</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003210640.png" alt="DEV share access" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003210813.png" alt="Backup script download" /></figure>
+<p>The script exposed credentials for <code>emily.oscars</code>, which allowed WinRM access.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003211121.png" alt="emily.oscars credentials" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003211303.png" alt="WinRM as emily" /></figure>
+<h2>SeBackupPrivilege Abuse</h2>
+<p>Privilege enumeration showed <code>SeBackupPrivilege</code> enabled for <code>emily.oscars</code>.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003211941.png" alt="SeBackupPrivilege enabled" /></figure>
+<p>Following a standard SeBackupPrivilege workflow, the registry hives were backed up and downloaded.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003212155.png" alt="Registry backup workflow" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003212302.png" alt="Hive backup completed" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003213615.png" alt="Hive files downloaded" /></figure>
+<p>The Administrator NTLM hash was extracted from the hives.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003214003.png" alt="Administrator hash extraction" /></figure>
+<p>Pass-the-Hash produced an Administrator shell.</p>
+<pre><code class="language-bash">evil-winrm -i CICADA-DC.cicada.htb -u &#39;administrator&#39; -H &#39;2b87e7c93a3e8a0ea4a581937016f341&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cicada/Pasted%20image%2020241003214339.png" alt="Administrator shell" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>Default passwords in onboarding documents are dangerous even when access is read-only.</li>
+<li>LDAP <code>description</code> fields are common places for accidental credential exposure.</li>
+<li>Backup scripts often contain reusable service or user credentials.</li>
+<li><code>SeBackupPrivilege</code> can be enough to extract registry hives and recover Administrator hashes.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

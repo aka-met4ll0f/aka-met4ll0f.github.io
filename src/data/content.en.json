@@ -1,27 +1,433 @@
 {
   "writeups": [
     {
+      "title": "HTB Writeup: Media",
+      "date": "2025-11-12",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "Windows compromise through media playlist NTLM capture, upload path redirection with an NTFS junction, FullPowers token recovery and GodPotato SYSTEM escalation.",
+      "tags": [
+        "Windows",
+        "NTLM",
+        "Responder",
+        "NTFS Junction",
+        "GodPotato"
+      ],
+      "url": "/writeups/media.html"
+    },
+    {
+      "title": "HTB Writeup: Pov",
+      "date": "2025-11-11",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "ASP.NET path traversal exposes machine keys, enabling ViewState RCE, credential recovery from CLIXML and SYSTEM access through SeDebugPrivilege token abuse.",
+      "tags": [
+        "Windows",
+        "ASP.NET",
+        "ViewState",
+        "DPAPI",
+        "SeDebugPrivilege"
+      ],
+      "url": "/writeups/pov.html"
+    },
+    {
+      "title": "HTB Writeup: Jeeves",
+      "date": "2025-10-31",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "Jenkins script console command execution leads to a user shell, KeePass database recovery, Administrator hash extraction and root flag discovery in an NTFS alternate data stream.",
+      "tags": [
+        "Windows",
+        "Jenkins",
+        "KeePass",
+        "Pass the Hash",
+        "ADS"
+      ],
+      "url": "/writeups/jeeves.html"
+    },
+    {
+      "title": "HTB Writeup: TombWatcher",
+      "date": "2025-06-10",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "Active Directory chain from supplied credentials to fake SPN Kerberoasting, gMSA password recovery, object ownership abuse and ESC15 certificate escalation.",
+      "tags": [
+        "Active Directory",
+        "Kerberoasting",
+        "gMSA",
+        "BloodyAD",
+        "ESC15"
+      ],
+      "url": "/writeups/tombwatcher.html"
+    },
+    {
+      "title": "HTB Writeup: Facts",
+      "date": "2026-02-21",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "Camaleon CMS account takeover leads to MinIO credentials, encrypted SSH key recovery and root through sudo facter custom facts.",
+      "tags": [
+        "Linux",
+        "Camaleon CMS",
+        "MinIO",
+        "SSH Key",
+        "facter"
+      ],
+      "url": "/writeups/facts.html"
+    },
+    {
+      "title": "HTB Writeup: Conversor",
+      "date": "2026-05-12",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "XSLT processing writes a malicious script for command execution, SQLite leaks credentials and sudo needrestart abuse creates a SUID root shell.",
+      "tags": [
+        "Linux",
+        "XSLT",
+        "File Write",
+        "SQLite",
+        "needrestart"
+      ],
+      "url": "/writeups/conversor.html"
+    },
+    {
+      "title": "HTB Writeup: Analytics",
+      "date": "2026-05-07",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "Metabase pre-auth RCE exposes container environment credentials, leading to SSH access and root via vulnerable Ubuntu OverlayFS behavior.",
+      "tags": [
+        "Linux",
+        "Metabase",
+        "CVE-2023-38646",
+        "Docker",
+        "OverlayFS"
+      ],
+      "url": "/writeups/analytics.html"
+    },
+    {
+      "title": "HTB Writeup: Dog",
+      "date": "2025-12-03",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "Exposed .git data leaks Backdrop credentials, CMS RCE gives a shell, password reuse pivots to SSH and sudo Bee eval executes commands as root.",
+      "tags": [
+        "Linux",
+        "Backdrop CMS",
+        "Git Disclosure",
+        "RCE",
+        "sudo"
+      ],
+      "url": "/writeups/dog.html"
+    },
+    {
+      "title": "HTB Writeup: Usage",
+      "date": "2024-11-08",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "SQL injection leaks an admin hash, laravel-admin avatar upload gives RCE, and a root backup helper is abused through wildcard behavior.",
+      "tags": [
+        "Linux",
+        "SQL Injection",
+        "Laravel Admin",
+        "File Upload",
+        "Wildcard Abuse"
+      ],
+      "url": "/writeups/usage.html"
+    },
+    {
+      "title": "HTB Writeup: Cap",
+      "date": "2024-10-26",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "An IDOR exposes packet captures containing credentials, which lead to SSH access and root via Python cap_setuid capability abuse.",
+      "tags": [
+        "Linux",
+        "IDOR",
+        "PCAP",
+        "FTP",
+        "Capabilities"
+      ],
+      "url": "/writeups/cap.html"
+    },
+    {
+      "title": "HTB Writeup: Editorial",
+      "date": "2024-10-22",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "SSRF exposes an internal API with credentials, Git history reveals a second user password and a vulnerable GitPython workflow is abused for root.",
+      "tags": [
+        "Linux",
+        "SSRF",
+        "Internal API",
+        "GitPython",
+        "SUID"
+      ],
+      "url": "/writeups/editorial.html"
+    },
+    {
+      "title": "HTB Writeup: Trickster",
+      "date": "2024-10-22",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "A long chain from exposed Git and PrestaShop RCE to container SSTI, backup credential recovery and PrusaSlicer post-processing abuse for root.",
+      "tags": [
+        "Linux",
+        "PrestaShop",
+        "Docker",
+        "changedetection.io",
+        "PrusaSlicer"
+      ],
+      "url": "/writeups/trickster.html"
+    },
+    {
+      "title": "HTB Writeup: Instant",
+      "date": "2024-10-21",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "APK decompilation exposes API context and JWT usage, an authenticated LFI retrieves SSH material and Solar-PuTTY backups reveal the root password.",
+      "tags": [
+        "Linux",
+        "APK",
+        "JWT",
+        "LFI",
+        "Solar-PuTTY"
+      ],
+      "url": "/writeups/instant.html"
+    },
+    {
+      "title": "HTB Writeup: Chemistry",
+      "date": "2024-10-21",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "A malicious CIF file exploits pymatgen for RCE, SQLite hashes provide SSH access and aiohttp static-file traversal reads root-owned files.",
+      "tags": [
+        "Linux",
+        "pymatgen",
+        "CIF",
+        "SQLite",
+        "aiohttp"
+      ],
+      "url": "/writeups/chemistry.html"
+    },
+    {
+      "title": "HTB Writeup: Sightless",
+      "date": "2024-10-04",
+      "platform": "Hack The Box",
+      "os": "Linux",
+      "summary": "SQLPad RCE lands in a container, shadow cracking provides SSH access and an internal admin panel command field is abused to expose the root flag.",
+      "tags": [
+        "Linux",
+        "SQLPad",
+        "Docker",
+        "Chisel",
+        "Chrome DevTools"
+      ],
+      "url": "/writeups/sightless.html"
+    },
+    {
+      "title": "HTB Writeup: Escape",
+      "date": "2026-05-20",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "Active Directory compromise through guest-readable SMB content, MSSQL NetNTLMv2 coercion, credential recovery from SQL logs, and AD CS ESC1 abuse.",
+      "tags": [
+        "Active Directory",
+        "MSSQL",
+        "NetNTLMv2",
+        "AD CS",
+        "ESC1"
+      ],
+      "url": "/writeups/escape.html"
+    },
+    {
+      "title": "HTB Writeup: Certificate",
+      "date": "2026-06-03",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "Web upload abuse, database credential recovery, Account Operators pivots, SeManageVolumePrivilege and forged AD CS certificates.",
+      "tags": [
+        "Active Directory",
+        "Web Upload",
+        "MySQL",
+        "SeManageVolumePrivilege",
+        "AD CS"
+      ],
+      "url": "/writeups/certificate.html"
+    },
+    {
+      "title": "HTB Writeup: Eighteen",
+      "date": "2025-11-21",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "MSSQL impersonation, PBKDF2 cracking and Windows Server 2025 BadSuccessor abuse to recover Administrator access.",
+      "tags": [
+        "Windows",
+        "MSSQL",
+        "PBKDF2",
+        "BadSuccessor",
+        "DCSync"
+      ],
+      "url": "/writeups/eighteen.html"
+    },
+    {
+      "title": "HTB Writeup: Darkzero",
+      "date": "2026-05-08",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "MSSQL links, reverse tunneling, Kerberos certificate abuse, token impersonation and unconstrained delegation across domain controllers.",
+      "tags": [
+        "Active Directory",
+        "MSSQL",
+        "Chisel",
+        "Rubeus",
+        "Unconstrained Delegation"
+      ],
+      "url": "/writeups/darkzero.html"
+    },
+    {
+      "title": "HTB Writeup: Manager",
+      "date": "2026-05-14",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "MSSQL file discovery exposes Raven credentials, leading to AD CS ESC7 abuse and Administrator authentication.",
+      "tags": [
+        "Active Directory",
+        "MSSQL",
+        "AD CS",
+        "ESC7",
+        "WinRM"
+      ],
+      "url": "/writeups/manager.html"
+    },
+    {
+      "title": "HTB Writeup: Forest",
+      "date": "2026-05-11",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "AS-REP roasting of svc-alfresco, Account Operators abuse, Exchange Windows Permissions and DCSync.",
+      "tags": [
+        "Active Directory",
+        "AS-REP Roasting",
+        "BloodHound",
+        "DCSync"
+      ],
+      "url": "/writeups/forest.html"
+    },
+    {
+      "title": "HTB Writeup: Puppy",
+      "date": "2025-05-24",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "Group write abuse, KeePass recovery, DPAPI credential decryption and DCSync to Administrator.",
+      "tags": [
+        "Active Directory",
+        "KeePass",
+        "DPAPI",
+        "DCSync"
+      ],
+      "url": "/writeups/puppy.html"
+    },
+    {
+      "title": "HTB Writeup: Jab",
+      "date": "2024-11-08",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "XMPP user discovery, AS-REP roasting, ExecuteDCOM access and Openfire RCE to SYSTEM.",
+      "tags": [
+        "Active Directory",
+        "XMPP",
+        "AS-REP Roasting",
+        "Openfire",
+        "CVE-2023-32315"
+      ],
+      "url": "/writeups/jab.html"
+    },
+    {
+      "title": "HTB Writeup: Administrator",
+      "date": "2024-11-13",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "Password reset chain, Password Safe recovery, Kerberoasting and DCSync to Administrator.",
+      "tags": [
+        "Active Directory",
+        "BloodHound",
+        "Kerberoasting",
+        "Password Safe",
+        "DCSync"
+      ],
+      "url": "/writeups/administrator.html"
+    },
+    {
+      "title": "HTB Writeup: Cicada",
+      "date": "2024-10-03",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "SMB and LDAP credential disclosure, developer share secrets and SeBackupPrivilege abuse to recover Administrator hash.",
+      "tags": [
+        "Active Directory",
+        "SMB",
+        "LDAP",
+        "SeBackupPrivilege",
+        "Pass the Hash"
+      ],
+      "url": "/writeups/cicada.html"
+    },
+    {
+      "title": "HTB Writeup: Mailing",
+      "date": "2024-10-26",
+      "platform": "Hack The Box",
+      "os": "Windows",
+      "summary": "hMailServer LFI, Outlook NTLM leak and LibreOffice exploitation for localadmin access.",
+      "tags": [
+        "Windows",
+        "LFI",
+        "hMailServer",
+        "CVE-2024-21413",
+        "LibreOffice"
+      ],
+      "url": "/writeups/mailing.html"
+    },
+    {
       "title": "HTB Writeup: Fluffy",
       "date": "2025-10-31",
       "platform": "Hack The Box",
+      "os": "Windows",
       "summary": "Active Directory attack chain from initial credentials, Kerberoasting, and AD CS (ESC16) abuse to Administrator authentication.",
-      "tags": ["Active Directory", "Kerberoasting", "AD CS", "ESC16"],
+      "tags": [
+        "Active Directory",
+        "Kerberoasting",
+        "AD CS",
+        "ESC16"
+      ],
       "url": "/writeups/fluffy.html"
     },
     {
       "title": "HTB Writeup: Postman",
       "date": "2025-11-11",
       "platform": "Hack The Box",
+      "os": "Linux",
       "summary": "Initial access through unauthenticated Redis, SSH pivot with public key, and local privilege escalation through Webmin to gain root.",
-      "tags": ["Redis", "SSH", "Webmin", "Linux"],
+      "tags": [
+        "Redis",
+        "SSH",
+        "Webmin",
+        "Linux"
+      ],
       "url": "/writeups/postman.html"
     },
     {
       "title": "HTB Writeup: Trick",
       "date": "2025-11-09",
       "platform": "Hack The Box",
+      "os": "Linux",
       "summary": "Web environment compromise using SQLi and LFI, SSH key recovery, and privilege escalation by manipulating fail2ban rules.",
-      "tags": ["SQL Injection", "LFI", "SSH", "Fail2ban"],
+      "tags": [
+        "SQL Injection",
+        "LFI",
+        "SSH",
+        "Fail2ban"
+      ],
       "url": "/writeups/trick.html"
     }
   ],
@@ -31,7 +437,13 @@
       "language": "Python",
       "type": "Network forensics",
       "summary": "Includes analisis_pcap.py to inspect PCAP/PCAPNG files with tshark and generate Markdown reports, plus tor_tunnel.sh to route traffic through Tor, capture evidence, and summarize findings in lab environments.",
-      "tags": ["PCAP", "Forensics", "tshark", "Tor", "Report"],
+      "tags": [
+        "PCAP",
+        "Forensics",
+        "tshark",
+        "Tor",
+        "Report"
+      ],
       "url": "https://github.com/aka-met4ll0f/pcap-forensics"
     },
     {
@@ -39,7 +451,13 @@
       "language": "Bash",
       "type": "Offensive reconnaissance",
       "summary": "Web and DNS reconnaissance toolkit with scripts such as dns_info_check.sh, recon_web.sh, and nmap_scan.sh, plus Python utilities for ffuf, technology fingerprinting, and Nmap output conversion to HTML/XLSX.",
-      "tags": ["Recon", "DNS", "Nmap", "ffuf", "OSINT"],
+      "tags": [
+        "Recon",
+        "DNS",
+        "Nmap",
+        "ffuf",
+        "OSINT"
+      ],
       "url": "https://github.com/aka-met4ll0f/recon-toolkit"
     },
     {
@@ -47,7 +465,12 @@
       "language": "Python",
       "type": "Identity automation",
       "summary": "Contains gen_users.py to generate usernames from CSV/XLSX, normalize characters, apply consistent formatting, remove duplicates, and separate invalid entries into output files.",
-      "tags": ["CSV", "XLSX", "Users", "Automation"],
+      "tags": [
+        "CSV",
+        "XLSX",
+        "Users",
+        "Automation"
+      ],
       "url": "https://github.com/aka-met4ll0f/username-generator"
     },
     {
@@ -55,7 +478,12 @@
       "language": "Shell",
       "type": "Visual evidence",
       "summary": "Includes web_screenshot_report.sh to capture web screenshots in batch mode and build a navigable index.html with visual evidence for surface and asset reviews.",
-      "tags": ["Screenshots", "Bash", "Report", "Web"],
+      "tags": [
+        "Screenshots",
+        "Bash",
+        "Report",
+        "Web"
+      ],
       "url": "https://github.com/aka-met4ll0f/web-screenshot-reporter"
     },
     {
@@ -63,7 +491,12 @@
       "language": "Python",
       "type": "Offensive lab",
       "summary": "Collection of scripts for controlled environments, including proxynova_save_per_user.py, xmlrpc_brute_force.py, wpscan_reporter.py, and webadmin_exploit_lab.py for authorized testing, evidence collection, and offensive behavior validation.",
-      "tags": ["Pentest", "WordPress", "WPScan", "Lab"],
+      "tags": [
+        "Pentest",
+        "WordPress",
+        "WPScan",
+        "Lab"
+      ],
       "url": "https://github.com/aka-met4ll0f/pentest-lab-scripts"
     }
   ]

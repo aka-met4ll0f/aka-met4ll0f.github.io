@@ -1,21 +1,11 @@
-const pageLang = document.documentElement.lang === "en" ? "en" : "es";
-
-const missingImageText =
-  pageLang === "en"
-    ? "Image pending: evidence is not available in the published repository yet."
-    : "Imagen pendiente: la evidencia aún no está disponible en el repositorio publicado.";
-
 function replaceMissingImage(image) {
   const figure = image.closest("figure");
-  const fallback = document.createElement("p");
-  fallback.className = "writeup-image-fallback";
-  fallback.textContent = missingImageText;
+  if (figure) {
+    figure.remove();
+    return;
+  }
 
   image.remove();
-
-  if (figure) {
-    figure.prepend(fallback);
-  }
 }
 
 document.querySelectorAll("img.writeup-image").forEach((image) => {

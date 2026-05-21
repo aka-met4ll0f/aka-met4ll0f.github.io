@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Chemistry | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Python Application Exploitation</p>
+      <h1>HTB Chemistry</h1>
+      <p class="headline">pymatgen CIF RCE, SQLite hash cracking and aiohttp arbitrary file read</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Chemistry allows CIF file uploads and rendering. The backend uses a vulnerable pymatgen path, allowing crafted CIF content to execute commands when viewed.</p>
+<h2>Initial Access</h2>
+<p>A modified example CIF triggers a reverse shell. Local application files include a database with user hashes, and cracking the <code>rosa</code> hash gives SSH access.</p>
+<h2>Privilege Escalation</h2>
+<p>Process and port enumeration identifies an internal aiohttp service on port 8080. Port forwarding exposes it locally, and CVE-2024-23334 allows arbitrary file read through the static file handler, including <code>/root/root.txt</code>.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">ssh rosa@chemistry.htb</code></pre>
+<pre><code class="language-bash">ssh -L 8080:127.0.0.1:8080 rosa@chemistry.htb</code></pre>
+<pre><code class="language-bash">curl http://127.0.0.1:8080/static/../../../../root/root.txt</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021161526.png" alt="chemistry evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021165229.png" alt="chemistry evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021170410.png" alt="chemistry evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021170342.png" alt="chemistry evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021170806.png" alt="chemistry evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021171000.png" alt="chemistry evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021171107.png" alt="chemistry evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021171205.png" alt="chemistry evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021171921.png" alt="chemistry evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021171952.png" alt="chemistry evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021172807.png" alt="chemistry evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021172953.png" alt="chemistry evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021195159.png" alt="chemistry evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021195424.png" alt="chemistry evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021200000.png" alt="chemistry evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021200013.png" alt="chemistry evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021200354.png" alt="chemistry evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021200810.png" alt="chemistry evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021200937.png" alt="chemistry evidence 19" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/chemistry/Pasted%20image%2020241021203831.png" alt="chemistry evidence 20" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

